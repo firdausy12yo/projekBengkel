@@ -11,7 +11,6 @@ if (
     exit();
 }
 
-
 // ==========================================
 // AMBIL PESANAN USER DARI DATABASE
 // ==========================================
@@ -25,7 +24,6 @@ $jumlah_diproses  = 0;
 $jumlah_selesai   = 0;
 $jumlah_ditolak   = 0;
 $jumlah_dibatalkan = 0;
-
 
 if (isset($_SESSION['id_pelanggan'])) {
 
@@ -82,7 +80,6 @@ if (isset($_SESSION['id_pelanggan'])) {
     $hasilPesanan =
         $stmtPesanan->get_result();
 
-
     while (
         $pesanan = $hasilPesanan->fetch_assoc()
     ) {
@@ -122,7 +119,6 @@ if (isset($_SESSION['id_pelanggan'])) {
     $stmtPesanan->close();
 }
 
-
 // Format tanggal Indonesia
 
 function tanggalIndonesia($tanggal)
@@ -151,20 +147,6 @@ function tanggalIndonesia($tanggal)
         . date('Y', $timestamp);
 }
 
-
-// pesan redirect
-
-$pesan_error =
-    isset($_GET['error'])
-    ? htmlspecialchars($_GET['error'])
-    : '';
-
-$pesan_sukses =
-    isset($_GET['sukses'])
-    ? htmlspecialchars($_GET['sukses'])
-    : '';
-
-
 // ==========================================
 // AMBIL PROFIL USER DARI DATABASE
 // ==========================================
@@ -174,12 +156,10 @@ $username_sesi = '';
 $email_sesi    = '';
 $no_hp_sesi    = '';
 
-
 if (isset($_SESSION['id_pelanggan'])) {
 
     $id_pelanggan =
         (int) $_SESSION['id_pelanggan'];
-
 
     $stmtProfil = $koneksi->prepare(
         "SELECT
@@ -192,7 +172,6 @@ if (isset($_SESSION['id_pelanggan'])) {
          LIMIT 1"
     );
 
-
     $stmtProfil->bind_param(
         "i",
         $id_pelanggan
@@ -203,12 +182,10 @@ if (isset($_SESSION['id_pelanggan'])) {
     $hasilProfil =
         $stmtProfil->get_result();
 
-
     if ($hasilProfil->num_rows === 1) {
 
         $profil =
             $hasilProfil->fetch_assoc();
-
 
         $nama_sesi =
             htmlspecialchars(
@@ -230,7 +207,6 @@ if (isset($_SESSION['id_pelanggan'])) {
                 $profil['no_HP']
             );
 
-
         // Sinkronkan session
         $_SESSION['nama_lengkap'] =
             $profil['nama_lengkap'];
@@ -241,7 +217,6 @@ if (isset($_SESSION['id_pelanggan'])) {
 
     $stmtProfil->close();
 }
-
 
 // ==========================================
 // PESAN REDIRECT
@@ -256,7 +231,6 @@ $pesan_sukses =
     isset($_GET['sukses'])
     ? htmlspecialchars($_GET['sukses'])
     : '';
-
 
 // ==========================================
 // HALAMAN AWAL
@@ -364,8 +338,14 @@ $halaman_awal =
                             <input type="text" name="alamat" placeholder="Alamat Lengkap" required>
                         </div>
                         <div class="input-group">
+                            <i class="fa-solid fa-phone input-icon"></i>
+                            <input type="tel" name="no_hp" placeholder="Nomor HP, contoh: 081234567890"
+                                pattern="08[0-9]{8,11}" minlength="10" maxlength="13"
+                                inputmode="numeric" required>
+                        </div>
+                        <div class="input-group">
                             <i class="fa-regular fa-envelope input-icon"></i>
-                            <input type="email" name="email" placeholder="Email" required>
+                            <input type="email" name="email" placeholder="Email" required autocomplete="email">
                         </div>
                         <div class="input-group">
                             <i class="fa-regular fa-user input-icon"></i>
@@ -454,7 +434,7 @@ $halaman_awal =
                 </li>
             </ul>
             <div class="nav-right">
-                <span class="nav-user"><i class="fa-solid fa-circle-user"></i> <?= $nama_sesi ?></span>
+                <span class="nav-user"><i class="fa-solid fa-circle-user"></i> @<?= $username_sesi ?></span>
                 <a href="logout.php" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                 <button class="hamburger" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
             </div>
@@ -837,7 +817,6 @@ $halaman_awal =
 
             </div>
 
-
             <!-- TAB STATUS -->
 
             <div class="tabs">
@@ -854,7 +833,6 @@ $halaman_awal =
 
                 </button>
 
-
                 <button
                     class="tab"
                     onclick="switchOrderTab(this, 'menunggu')">
@@ -866,7 +844,6 @@ $halaman_awal =
                     </span>
 
                 </button>
-
 
                 <button
                     class="tab"
@@ -880,7 +857,6 @@ $halaman_awal =
 
                 </button>
 
-
                 <button
                     class="tab"
                     onclick="switchOrderTab(this, 'diproses')">
@@ -893,7 +869,6 @@ $halaman_awal =
 
                 </button>
 
-
                 <button
                     class="tab"
                     onclick="switchOrderTab(this, 'selesai')">
@@ -905,7 +880,6 @@ $halaman_awal =
                     </span>
 
                 </button>
-
 
                 <button
                     class="tab"
@@ -933,26 +907,20 @@ $halaman_awal =
 
             </div>
 
-
-
             <div
                 class="list-container"
                 id="order-list">
 
-
                 <?php foreach ($pesanan_user as $pesanan): ?>
-
 
                     <?php
 
                     $status =
                         $pesanan['status_booking'];
 
-
                     // status untuk filter
 
                     $data_status = strtolower($status);
-
 
                     // CSS badge
 
@@ -968,7 +936,6 @@ $halaman_awal =
 
                             break;
 
-
                         case 'Diterima':
 
                             $class_status =
@@ -978,7 +945,6 @@ $halaman_awal =
                                 'fa-calendar-check';
 
                             break;
-
 
                         case 'Diproses':
 
@@ -990,7 +956,6 @@ $halaman_awal =
 
                             break;
 
-
                         case 'Selesai':
 
                             $class_status =
@@ -1000,7 +965,6 @@ $halaman_awal =
                                 'fa-circle-check';
 
                             break;
-
 
                         default:
 
@@ -1013,7 +977,6 @@ $halaman_awal =
                             break;
                     }
 
-
                     $id_display =
                         'BK-' .
                         str_pad(
@@ -1023,12 +986,10 @@ $halaman_awal =
                             STR_PAD_LEFT
                         );
 
-
                     $tanggal_display =
                         tanggalIndonesia(
                             $pesanan['tanggal_booking']
                         );
-
 
                     $jam_display =
                         str_pad(
@@ -1037,7 +998,6 @@ $halaman_awal =
                             '0',
                             STR_PAD_LEFT
                         ) . ':00';
-
 
                     $kendaraan_display =
                         $pesanan['merk']
@@ -1051,14 +1011,11 @@ $halaman_awal =
                             )
                         );
 
-
                     ?>
-
 
                     <div
                         class="order-card"
                         data-status="<?= htmlspecialchars($data_status) ?>">
-
 
                         <div class="order-icon">
 
@@ -1066,9 +1023,7 @@ $halaman_awal =
 
                         </div>
 
-
                         <div class="order-info">
-
 
                             <span
                                 class="status-badge <?= $class_status ?>">
@@ -1077,7 +1032,6 @@ $halaman_awal =
 
                             </span>
 
-
                             <p>
 
                                 <?= htmlspecialchars(
@@ -1085,7 +1039,6 @@ $halaman_awal =
                                 ) ?>
 
                             </p>
-
 
                             <small>
 
@@ -1103,9 +1056,7 @@ $halaman_awal =
 
                             </small>
 
-
                         </div>
-
 
                         <div class="order-actions">
 
@@ -1134,7 +1085,6 @@ $halaman_awal =
                                 </form>
 
                             <?php endif; ?>
-
 
                             <button
                                 class="btn-detail"
@@ -1182,13 +1132,9 @@ $halaman_awal =
 
                         </div>
 
-
                     </div>
 
-
                 <?php endforeach; ?>
-
-
 
                 <div
                     id="order-empty"
@@ -1265,83 +1211,27 @@ $halaman_awal =
                 <!-- Menu Akun -->
                 <div class="account-grid">
                     <div class="account-section">
-                        <h3>
-                            <i class="fa-solid fa-pen-to-square"></i>
-                            Edit Profil
-                        </h3>
-
-
-                        <form
-                            class="account-form"
-                            action="proses_ubah_profil.php"
-                            method="POST">
-
+                        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Profil</h3>
+                        <form class="account-form" action="proses_ubah_profil.php" method="POST">
                             <div class="form-field">
-
                                 <label>Nama Lengkap</label>
-
-                                <input
-                                    type="text"
-                                    name="nama_lengkap"
-                                    value="<?= $nama_sesi ?>"
-                                    placeholder="Nama Lengkap"
-                                    required>
-
+                                <input type="text" name="nama_lengkap" value="<?= $nama_sesi ?>" placeholder="Nama Lengkap" required>
                             </div>
-
-
                             <div class="form-field">
-
                                 <label>Username</label>
-
-                                <input
-                                    type="text"
-                                    name="username"
-                                    value="<?= $username_sesi ?>"
-                                    placeholder="Username"
-                                    required>
-
+                                <input type="text" name="username" value="<?= $username_sesi ?>" placeholder="Username" required>
                             </div>
-
-
                             <div class="form-field">
-
                                 <label>Email</label>
-
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value="<?= $email_sesi ?>"
-                                    placeholder="email@contoh.com"
-                                    required>
-
+                                <input type="email" name="email" value="<?= $email_sesi ?>" placeholder="email@contoh.com" required>
                             </div>
-
-
                             <div class="form-field">
-
                                 <label>Nomor Telepon</label>
-
-                                <input
-                                    type="tel"
-                                    name="no_hp"
-                                    value="<?= $no_hp_sesi ?>"
-                                    placeholder="08XXXXXXXXXX"
-                                    required>
-
+                                <input type="tel" name="no_hp" value="<?= $no_hp_sesi ?>" placeholder="08XXXXXXXXXX" required>
                             </div>
-
-
-                            <button
-                                type="submit"
-                                class="btn-primary btn-sm">
-
-                                <i class="fa-solid fa-floppy-disk"></i>
-
-                                Simpan Perubahan
-
+                            <button type="submit" class="btn-primary btn-sm">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
                             </button>
-
                         </form>
                     </div>
 
@@ -1424,9 +1314,6 @@ $halaman_awal =
         </div>
     </div>
 
-
-
-
     <!-- Modal Booking Sukses -->
     <div id="booking-modal" class="modal-overlay" style="display:none;">
         <div class="modal-box">
@@ -1482,7 +1369,6 @@ $halaman_awal =
                 detailModal.style.display = 'none';
             }
 
-
             // Tutup modal booking jika masih terbuka
             const bookingModal =
                 document.getElementById('booking-modal');
@@ -1491,7 +1377,6 @@ $halaman_awal =
                 bookingModal.style.display = 'none';
             }
 
-
             // Sembunyikan semua halaman
             document
                 .querySelectorAll('.content-section')
@@ -1499,14 +1384,12 @@ $halaman_awal =
                     el.classList.remove('active');
                 });
 
-
             // Hilangkan status active navbar
             document
                 .querySelectorAll('.nav-links a')
                 .forEach(el => {
                     el.classList.remove('active');
                 });
-
 
             // Tampilkan halaman yang dipilih
             const targetPage =
@@ -1518,7 +1401,6 @@ $halaman_awal =
                 targetPage.classList.add('active');
             }
 
-
             // Aktifkan navbar
             const navEl =
                 document.getElementById(
@@ -1529,7 +1411,6 @@ $halaman_awal =
                 navEl.classList.add('active');
             }
 
-
             // Tutup menu mobile
             const navLinks =
                 document.getElementById('nav-links');
@@ -1537,7 +1418,6 @@ $halaman_awal =
             if (navLinks) {
                 navLinks.classList.remove('open');
             }
-
 
             window.scrollTo(0, 0);
         }
@@ -1636,7 +1516,6 @@ $halaman_awal =
             ).style.display = 'flex';
         }
 
-
         function openOrderFromData(button) {
 
             openOrderDetail(
@@ -1677,34 +1556,9 @@ $halaman_awal =
                 });
             }, 100);
         }
-
-        // ============================================
-        // SUBMIT BOOKING
-        // ============================================
-
-
-
-
-
-
-
         function closeModal() {
             document.getElementById('booking-modal').style.display = 'none';
             showPage('order');
-        }
-
-        // ============================================
-        // AKUN: SIMPAN PROFIL & UBAH PASSWORD
-        // ============================================
-        function simpanProfil(e) {
-            e.preventDefault();
-            showToast('Profil berhasil disimpan!', 'success');
-        }
-
-        function ubahPassword(e) {
-            e.preventDefault();
-            showToast('Password berhasil diubah!', 'success');
-            e.target.reset();
         }
 
         // ============================================
