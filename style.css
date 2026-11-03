@@ -884,7 +884,17 @@ a { text-decoration: none; }
 .status-selesai { background: #e6f7ec; color: var(--success); }
 .status-batal   { background: #ffe6e6; color: var(--danger); }
 
-.order-actions { flex-shrink: 0; }
+.order-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cancel-form {
+    margin: 0;
+    padding: 0;
+}
 .btn-detail {
     padding: 8px 16px;
     background: var(--bg);
@@ -1252,8 +1262,10 @@ a { text-decoration: none; }
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    margin-left: 6px;
     transition: 0.2s;
+    display: flex;
+    align-items: center;             
+    gap: 6px;
 }
 
 .btn-cancel-order:hover {

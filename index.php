@@ -165,31 +165,108 @@ $pesan_sukses =
     : '';
 
 
-// halaman awal
+// ==========================================
+// AMBIL PROFIL USER DARI DATABASE
+// ==========================================
+
+$nama_sesi     = 'Pengguna';
+$username_sesi = '';
+$email_sesi    = '';
+$no_hp_sesi    = '';
+
+
+if (isset($_SESSION['id_pelanggan'])) {
+
+    $id_pelanggan =
+        (int) $_SESSION['id_pelanggan'];
+
+
+    $stmtProfil = $koneksi->prepare(
+        "SELECT
+            nama_lengkap,
+            username,
+            email,
+            no_HP
+         FROM pelanggan
+         WHERE id_pelanggan = ?
+         LIMIT 1"
+    );
+
+
+    $stmtProfil->bind_param(
+        "i",
+        $id_pelanggan
+    );
+
+    $stmtProfil->execute();
+
+    $hasilProfil =
+        $stmtProfil->get_result();
+
+
+    if ($hasilProfil->num_rows === 1) {
+
+        $profil =
+            $hasilProfil->fetch_assoc();
+
+
+        $nama_sesi =
+            htmlspecialchars(
+                $profil['nama_lengkap']
+            );
+
+        $username_sesi =
+            htmlspecialchars(
+                $profil['username']
+            );
+
+        $email_sesi =
+            htmlspecialchars(
+                $profil['email']
+            );
+
+        $no_hp_sesi =
+            htmlspecialchars(
+                $profil['no_HP']
+            );
+
+
+        // Sinkronkan session
+        $_SESSION['nama_lengkap'] =
+            $profil['nama_lengkap'];
+
+        $_SESSION['username'] =
+            $profil['username'];
+    }
+
+    $stmtProfil->close();
+}
+
+
+// ==========================================
+// PESAN REDIRECT
+// ==========================================
+
+$pesan_error =
+    isset($_GET['error'])
+    ? htmlspecialchars($_GET['error'])
+    : '';
+
+$pesan_sukses =
+    isset($_GET['sukses'])
+    ? htmlspecialchars($_GET['sukses'])
+    : '';
+
+
+// ==========================================
+// HALAMAN AWAL
+// ==========================================
 
 $halaman_awal =
     isset($_SESSION['id_pelanggan'])
     ? 'main-app'
     : 'auth-page';
 
-$username_sesi =
-    isset($_SESSION['username'])
-    ? htmlspecialchars($_SESSION['username'])
-    : 'Pengguna';
-
-$nama_sesi =
-    isset($_SESSION['nama_lengkap'])
-    ? htmlspecialchars($_SESSION['nama_lengkap'])
-    : $username_sesi;
-
-// Cek apakah ada pesan dari redirect
-$pesan_error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
-$pesan_sukses = isset($_GET['sukses']) ? htmlspecialchars($_GET['sukses']) : '';
-
-// Tentukan halaman awal: jika sudah login, tampilkan dashboard
-$halaman_awal = isset($_SESSION['id_pelanggan']) ? 'main-app' : 'auth-page';
-$username_sesi = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Pengguna';
-$nama_sesi = isset($_SESSION['nama_lengkap']) ? htmlspecialchars($_SESSION['nama_lengkap']) : $username_sesi;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -1032,6 +1109,32 @@ $nama_sesi = isset($_SESSION['nama_lengkap']) ? htmlspecialchars($_SESSION['nama
 
                         <div class="order-actions">
 
+                            <?php if ($status === 'Menunggu'): ?>
+
+                                <form
+                                    action="proses_batal_booking.php"
+                                    method="POST"
+                                    class="cancel-form"
+                                    onsubmit="return confirmBatalBooking();">
+
+                                    <input
+                                        type="hidden"
+                                        name="id_booking"
+                                        value="<?= (int)$pesanan['id_booking'] ?>">
+
+                                    <button
+                                        type="submit"
+                                        class="btn-cancel-order">
+
+                                        <i class="fa-solid fa-xmark"></i>
+                                        Batalkan
+
+                                    </button>
+
+                                </form>
+
+                            <?php endif; ?>
+
 
                             <button
                                 class="btn-detail"
@@ -1076,29 +1179,7 @@ $nama_sesi = isset($_SESSION['nama_lengkap']) ? htmlspecialchars($_SESSION['nama
                                 <i class="fa-solid fa-chevron-right"></i>
 
                             </button>
-                            <?php if (
-                                $status === 'Menunggu' ||
-                                $status === 'Diterima'
-                            ): ?>
 
-                                <form
-                                    action="proses_batal_booking.php"
-                                    method="POST"
-                                    style="display:inline;"
-                                    onsubmit="return confirmBatalBooking();">
-
-                                    <input
-                                        type="hidden"
-                                        name="id_booking"
-                                        value="<?= (int)$pesanan['id_booking'] ?>">
-                                    <button
-                                        type="submit"
-                                        class="btn-cancel-order">
-                                        <i class="fa-solid fa-xmark"></i>
-                                        Batalkan
-                                    </button>
-                                </form>
-                            <?php endif; ?>
                         </div>
 
 
@@ -1184,25 +1265,83 @@ $nama_sesi = isset($_SESSION['nama_lengkap']) ? htmlspecialchars($_SESSION['nama
                 <!-- Menu Akun -->
                 <div class="account-grid">
                     <div class="account-section">
-                        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Profil</h3>
-                        <form class="account-form" onsubmit="simpanProfil(event)">
+                        <h3>
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            Edit Profil
+                        </h3>
+
+
+                        <form
+                            class="account-form"
+                            action="proses_ubah_profil.php"
+                            method="POST">
+
                             <div class="form-field">
+
                                 <label>Nama Lengkap</label>
-                                <input type="text" value="<?= $nama_sesi ?>" placeholder="Nama Lengkap">
+
+                                <input
+                                    type="text"
+                                    name="nama_lengkap"
+                                    value="<?= $nama_sesi ?>"
+                                    placeholder="Nama Lengkap"
+                                    required>
+
                             </div>
+
+
                             <div class="form-field">
+
                                 <label>Username</label>
-                                <input type="text" value="<?= $username_sesi ?>" placeholder="Username">
+
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value="<?= $username_sesi ?>"
+                                    placeholder="Username"
+                                    required>
+
                             </div>
+
+
                             <div class="form-field">
+
                                 <label>Email</label>
-                                <input type="email" placeholder="email@contoh.com">
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value="<?= $email_sesi ?>"
+                                    placeholder="email@contoh.com"
+                                    required>
+
                             </div>
+
+
                             <div class="form-field">
+
                                 <label>Nomor Telepon</label>
-                                <input type="tel" placeholder="08XXXXXXXXXX">
+
+                                <input
+                                    type="tel"
+                                    name="no_hp"
+                                    value="<?= $no_hp_sesi ?>"
+                                    placeholder="08XXXXXXXXXX"
+                                    required>
+
                             </div>
-                            <button type="submit" class="btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+
+
+                            <button
+                                type="submit"
+                                class="btn-primary btn-sm">
+
+                                <i class="fa-solid fa-floppy-disk"></i>
+
+                                Simpan Perubahan
+
+                            </button>
+
                         </form>
                     </div>
 
