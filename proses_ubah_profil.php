@@ -76,6 +76,34 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 
+// Periksa email asli pelanggan
+$cekEmailAsli = $koneksi->prepare(
+    "SELECT email
+     FROM pelanggan
+     WHERE id_pelanggan = ?
+     LIMIT 1"
+);
+
+$cekEmailAsli->bind_param("i", $id_pelanggan);
+$cekEmailAsli->execute();
+
+$dataEmailAsli = $cekEmailAsli->get_result()->fetch_assoc();
+$cekEmailAsli->close();
+
+if (!$dataEmailAsli) {
+    header("Location: index.php?halaman=account&error=" .
+        urlencode("Akun tidak ditemukan."));
+    exit();
+}
+
+// Email berbeda harus melalui verifikasi ulang
+if (strcasecmp($email, $dataEmailAsli['email']) !== 0) {
+    header("Location: index.php?halaman=account&error=" .
+        urlencode("Perubahan email membutuhkan verifikasi OTP."));
+    exit();
+}
+
+
 // ==========================================
 // CEK USERNAME / EMAIL DUPLIKAT
 // ==========================================

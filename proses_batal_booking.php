@@ -50,6 +50,7 @@ $stmt = $koneksi->prepare(
      FROM booking
      WHERE id_booking = ?
      AND id_pelanggan = ?
+     AND status_booking = 'Menunggu'
      LIMIT 1"
 );
 
@@ -85,10 +86,8 @@ $stmt->close();
 // ================================
 // CEK STATUS
 // ================================
-
 $status_boleh_dibatalkan = [
-    'Menunggu',
-    'Diterima'
+    'Menunggu'
 ];
 
 
@@ -134,7 +133,7 @@ $update->bind_param(
 );
 
 
-if ($update->execute()) {
+if ($update->execute() && $update->affected_rows === 1) {
 
     $update->close();
 

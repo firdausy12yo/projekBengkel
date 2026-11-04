@@ -2,7 +2,7 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 
-function kirimOtpEmail(string $email, string $nama, string $otp): array
+function kirimOtpEmail(string $email, string $nama, string $otp, string $tujuan = 'verifikasi'): array
 {
     $autoload = __DIR__ . '/vendor/autoload.php';
 
@@ -46,16 +46,21 @@ function kirimOtpEmail(string $email, string $nama, string $otp): array
         $mail->addAddress($email, $nama);
 
         $mail->isHTML(true);
-        $mail->Subject = 'Kode OTP Verifikasi Email PitStop.id';
+        $resetPassword = $tujuan === 'reset_password';
+        $judul = $resetPassword ? 'Reset Password' : 'Verifikasi Email';
+        $kalimat = $resetPassword
+            ? 'Gunakan kode berikut untuk mengizinkan penggantian password akun PitStop.id kamu.'
+            : 'Gunakan kode berikut untuk memverifikasi email akun PitStop.id kamu.';
+        $mail->Subject = 'Kode OTP ' . $judul . ' PitStop.id';
 
         $namaAman = htmlspecialchars($nama, ENT_QUOTES, 'UTF-8');
         $otpAman = htmlspecialchars($otp, ENT_QUOTES, 'UTF-8');
 
         $mail->Body = "
             <div style='font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px'>
-                <h2 style='margin-bottom:8px'>Verifikasi Email PitStop.id</h2>
+                <h2 style='margin-bottom:8px'>{$judul} PitStop.id</h2>
                 <p>Halo, {$namaAman}.</p>
-                <p>Gunakan kode OTP berikut untuk memverifikasi email akun PitStop.id kamu:</p>
+                <p>{$kalimat}</p>
                 <div style='font-size:32px;font-weight:700;letter-spacing:8px;
                             text-align:center;padding:18px;background:#f4f4f4;
                             border-radius:10px;margin:20px 0'>
@@ -64,13 +69,13 @@ function kirimOtpEmail(string $email, string $nama, string $otp): array
                 <p>Kode ini berlaku selama <strong>5 menit</strong>.</p>
                 <p>Jangan berikan kode OTP ini kepada siapa pun.</p>
                 <p style='color:#777;font-size:13px;margin-top:24px'>
-                    Jika kamu tidak merasa mendaftar di PitStop.id, abaikan email ini.
+                    Jika kamu tidak meminta kode ini, abaikan email ini.
                 </p>
             </div>
         ";
 
         $mail->AltBody =
-            "Kode OTP PitStop.id kamu: {$otp}. Kode berlaku selama 5 menit.";
+            "Kode OTP {$judul} PitStop.id: {$otp}. Kode berlaku selama 5 menit.";
 
         $mail->send();
 

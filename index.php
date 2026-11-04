@@ -441,8 +441,9 @@ $halaman_awal =
                             </button>
                         </div>
 
-                        <a class="forgot-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=pitstopid.official@gmail.com&amp;su=Lupa+Password+PitStop.id&amp;body=Halo+admin,+saya+lupa+password.+Username+saya:+" target="_blank" rel="noopener">Lupa password?</a>
-
+                        <a class="forgot-link" href="lupa_password.php">
+                            Lupa password?
+                        </a>
                         <button type="submit" class="btn-primary">
                             <i class="fa-solid fa-right-to-bracket"></i> Masuk
                         </button>
