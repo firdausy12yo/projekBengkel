@@ -44,7 +44,7 @@
     grid-row: 2;
 }
 
-/* Zona Bahaya tetap di bagian bawah */
+/* Sesi Akun tetap di bagian bawah */
 #content-account .account-grid > .account-section:nth-child(4) {
     grid-column: 1 / -1;
     grid-row: 3;
@@ -84,13 +84,13 @@
     border-radius: 10px;
     border: 1px solid #dbe2f5;
     background: #f8faff;
-    color: #2732bc;
+    color: var(--primary);
     cursor: pointer;
     transition: 0.2s;
 }
 
 #content-account .vehicle-scroll-buttons button:hover {
-    background: #2732bc;
+    background: var(--primary);
     color: white;
 }
 
@@ -167,7 +167,7 @@
     min-width: 0;
     margin: 0;
     padding: 10px 6px;
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap;
 }
 

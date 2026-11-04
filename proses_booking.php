@@ -3,6 +3,7 @@
 session_start();
 
 include 'koneksi.php';
+require_once __DIR__ . '/konfigurasi_booking.php';
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -52,8 +53,31 @@ $nopol =
         trim($_POST['nopol'] ?? '')
     );
 
-$layanan =
-    trim($_POST['layanan'] ?? '');
+// Form mengirim layanan[] (boleh lebih dari satu). Tetap terima string tunggal.
+$layananInput = $_POST['layanan'] ?? [];
+
+if (!is_array($layananInput)) {
+    $layananInput = [$layananInput];
+}
+
+$layananDipilih = [];
+
+foreach ($layananInput as $item) {
+
+    if (!is_string($item)) {
+        continue;
+    }
+
+    $item = trim($item);
+
+    if (
+        $item !== '' &&
+        strlen($item) <= 100 &&
+        !in_array($item, $layananDipilih, true)
+    ) {
+        $layananDipilih[] = $item;
+    }
+}
 
 $keluhan =
     trim($_POST['keluhan'] ?? '');
@@ -90,7 +114,8 @@ if (
         $tahun > ((int)date('Y') + 1) || $nopol === '' ||
         strlen($merk) > 100 || strlen($model) > 100 || strlen($nopol) > 20
     )) ||
-    $layanan === '' ||
+    empty($layananDipilih) ||
+    count($layananDipilih) > MAKS_LAYANAN_PER_BOOKING ||
     $tanggal === '' ||
     $jam === '' ||
     $bengkel === ''
@@ -123,6 +148,16 @@ if ($tanggal < date('Y-m-d')) {
 
 $jam_booking =
     (int) substr($jam, 0, 2);
+
+if (!in_array($jam_booking, JAM_OPERASIONAL, true)) {
+
+    header(
+        "Location: index.php?halaman=booking&error="
+            . urlencode("Jam servis tidak valid.")
+    );
+
+    exit();
+}
 
 
 // kendaraan.tahun_keluar menggunakan DATE
@@ -281,7 +316,7 @@ try {
 
 
     // ==========================================
-    // 2. CARI LAYANAN
+    // 3. CARI / BUAT SEMUA LAYANAN YANG DIPILIH
     // ==========================================
 
     $cekLayanan =
@@ -294,85 +329,109 @@ try {
              LIMIT 1"
         );
 
-    $cekLayanan->bind_param(
-        "s",
-        $layanan
-    );
-
-    $cekLayanan->execute();
-
-    $hasilLayanan =
-        $cekLayanan->get_result();
-
-
-    if ($hasilLayanan->num_rows === 1) {
-
-        $dataLayanan =
-            $hasilLayanan->fetch_assoc();
-
-        $id_layanan =
-            (int)$dataLayanan['id_layanan'];
-
-        $harga =
-            (int)$dataLayanan['harga'];
-    } else {
-
-
-        /*
-         * Form kamu punya layanan seperti:
-         * Servis Ban & Roda
-         * Servis Mesin
-         * Servis AC
-         * dll.
-         *
-         * Kalau belum ada di database,
-         * otomatis dibuat.
-         */
-
-        $deskripsi =
-            "Layanan booking PitStop.id";
-
-        $harga = 0;
-
-
-        $insertLayanan =
-            $koneksi->prepare(
-                "INSERT INTO layanan
-                (
-                    nama_layanan,
-                    deskripsi,
-                    harga
-                )
-                VALUES (?, ?, ?)"
-            );
-
-        $insertLayanan->bind_param(
-            "ssi",
-            $layanan,
-            $deskripsi,
-            $harga
+    $insertLayanan =
+        $koneksi->prepare(
+            "INSERT INTO layanan
+            (
+                nama_layanan,
+                deskripsi,
+                harga
+            )
+            VALUES (?, ?, ?)"
         );
 
-        if (!$insertLayanan->execute()) {
+    $detailLayanan = [];
 
-            throw new Exception(
-                "Gagal menyimpan layanan."
+    foreach ($layananDipilih as $namaLayanan) {
+
+        $cekLayanan->bind_param("s", $namaLayanan);
+        $cekLayanan->execute();
+
+        $hasilLayanan = $cekLayanan->get_result();
+
+        if ($hasilLayanan->num_rows === 1) {
+
+            $dataLayanan = $hasilLayanan->fetch_assoc();
+
+            $detailLayanan[] = [
+                (int)$dataLayanan['id_layanan'],
+                (int)$dataLayanan['harga'],
+            ];
+        } else {
+
+            // Layanan belum ada di database -> dibuat otomatis.
+            $deskripsi = "Layanan booking PitStop.id";
+            $hargaBaru = 0;
+
+            $insertLayanan->bind_param(
+                "ssi",
+                $namaLayanan,
+                $deskripsi,
+                $hargaBaru
             );
+
+            if (!$insertLayanan->execute()) {
+
+                throw new Exception(
+                    "Gagal menyimpan layanan."
+                );
+            }
+
+            $detailLayanan[] = [
+                $koneksi->insert_id,
+                $hargaBaru,
+            ];
         }
-
-
-        $id_layanan =
-            $koneksi->insert_id;
-
-        $insertLayanan->close();
     }
 
-
     $cekLayanan->close();
+    $insertLayanan->close();
 
 
     // ==========================================
-    // 3. SIMPAN BOOKING
+    // 4. CEK KUOTA JAM (di server, tidak bisa dilewati)
+    // ==========================================
+
+    $statusAktif = STATUS_AKTIF_BOOKING;
+
+    $placeholder = implode(',', array_fill(0, count($statusAktif), '?'));
+
+    $cekKuota =
+        $koneksi->prepare(
+            "SELECT COUNT(*) AS total
+             FROM booking
+             WHERE tanggal_booking = ?
+               AND jam_booking = ?
+               AND nama_bengkel = ?
+               AND status_booking IN ($placeholder)
+             FOR UPDATE"
+        );
+
+    $tipeKuota = 'sis' . str_repeat('s', count($statusAktif));
+
+    $paramKuota = array_merge(
+        [$tanggal, $jam_booking, $bengkel],
+        $statusAktif
+    );
+
+    $cekKuota->bind_param($tipeKuota, ...$paramKuota);
+    $cekKuota->execute();
+
+    $jumlahTerisi =
+        (int)$cekKuota->get_result()->fetch_assoc()['total'];
+
+    $cekKuota->close();
+
+    if ($jumlahTerisi >= KUOTA_PER_JAM) {
+
+        throw new Exception(
+            "Jam tersebut sudah penuh. Silakan pilih jam atau bengkel lain."
+        );
+    }
+
+
+    // ==========================================
+    // 5. SIMPAN BOOKING
     // ==========================================
 
     $status =
@@ -427,7 +486,7 @@ try {
 
 
     // ==========================================
-    // 4. SIMPAN DETAIL BOOKING
+    // 6. SIMPAN DETAIL BOOKING (satu baris per layanan)
     // ==========================================
 
     $insertDetail =
@@ -441,22 +500,22 @@ try {
             VALUES (?, ?, ?)"
         );
 
+    foreach ($detailLayanan as [$id_layanan, $harga]) {
 
-    $insertDetail->bind_param(
-        "iii",
-        $id_booking,
-        $id_layanan,
-        $harga
-    );
-
-
-    if (!$insertDetail->execute()) {
-
-        throw new Exception(
-            "Gagal menyimpan detail booking."
+        $insertDetail->bind_param(
+            "iii",
+            $id_booking,
+            $id_layanan,
+            $harga
         );
-    }
 
+        if (!$insertDetail->execute()) {
+
+            throw new Exception(
+                "Gagal menyimpan detail booking."
+            );
+        }
+    }
 
     $insertDetail->close();
 

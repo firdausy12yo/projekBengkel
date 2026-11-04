@@ -56,9 +56,8 @@ $csrfNotif = htmlspecialchars(
         </button>
     </div>
 
-    <form action="proses_notifikasi.php" method="POST">
-        <input type="hidden" name="csrf_token"
-            value="<?= $csrfNotif ?>">
+    <form class="psn-header-action" action="proses_notifikasi.php" method="POST">
+        <input type="hidden" name="csrf_token" value="<?= $csrfNotif ?>">
         <input type="hidden" name="aksi" value="baca_semua">
 
         <button class="psn-read-all" type="submit"

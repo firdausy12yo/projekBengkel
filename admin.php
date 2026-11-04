@@ -102,6 +102,13 @@ ORDER BY
 $pesanan = $koneksi->query($sql);
 
 
+function grupStatus($status)
+{
+    return in_array($status, ['Ditolak', 'Dibatalkan'], true)
+        ? 'batal'
+        : strtolower($status);
+}
+
 function classStatus($status)
 {
     switch ($status) {
@@ -152,8 +159,16 @@ function classStatus($status)
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link
         rel="stylesheet"
-        href="admin.css">
+        href="admin.css?v=<?= filemtime(__DIR__ . '/admin.css') ?>">
 
 </head>
 
@@ -349,6 +364,28 @@ function classStatus($status)
 
 
 
+            <div class="orders-toolbar">
+
+                <div class="filter-tabs" id="filter-tabs" role="tablist" aria-label="Filter status booking">
+                    <button type="button" class="filter-tab active" data-filter="semua" role="tab" aria-selected="true">Semua <span class="count">0</span></button>
+                    <button type="button" class="filter-tab" data-filter="menunggu" role="tab" aria-selected="false">Menunggu <span class="count">0</span></button>
+                    <button type="button" class="filter-tab" data-filter="diterima" role="tab" aria-selected="false">Diterima <span class="count">0</span></button>
+                    <button type="button" class="filter-tab" data-filter="diproses" role="tab" aria-selected="false">Diproses <span class="count">0</span></button>
+                    <button type="button" class="filter-tab" data-filter="selesai" role="tab" aria-selected="false">Selesai <span class="count">0</span></button>
+                    <button type="button" class="filter-tab" data-filter="batal" role="tab" aria-selected="false">Ditolak / Batal <span class="count">0</span></button>
+                </div>
+
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        id="search-order"
+                        placeholder="Cari nama, plat, layanan, ID..."
+                        aria-label="Cari booking">
+                </div>
+
+            </div>
+
             <div class="table-wrapper">
 
 
@@ -389,10 +426,18 @@ function classStatus($status)
                             <?php while ($row = $pesanan->fetch_assoc()): ?>
 
 
-                                <tr>
+                                <tr
+                                    class="order-row"
+                                    data-status="<?= grupStatus($row['status_booking']) ?>"
+                                    data-search="<?= htmlspecialchars(strtolower(
+                                                        'bk-' . str_pad($row['id_booking'], 5, '0', STR_PAD_LEFT) . ' ' .
+                                                            $row['nama_lengkap'] . ' ' . $row['username'] . ' ' .
+                                                            $row['merk'] . ' ' . $row['model'] . ' ' . $row['no_plat'] . ' ' .
+                                                            ($row['layanan'] ?? '')
+                                                    ), ENT_QUOTES, 'UTF-8') ?>">
 
 
-                                    <td>
+                                    <td data-label="ID">
 
                                         <strong>
 
@@ -408,7 +453,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td>
+                                    <td data-label="Pelanggan">
 
                                         <strong>
 
@@ -429,7 +474,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td>
+                                    <td data-label="Kendaraan">
 
                                         <?= htmlspecialchars(
                                             $row['merk']
@@ -450,7 +495,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td>
+                                    <td data-label="Layanan">
 
                                         <?= htmlspecialchars(
                                             $row['layanan'] ?? '-'
@@ -459,7 +504,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td>
+                                    <td data-label="Jadwal">
 
                                         <?= date(
                                             'd M Y',
@@ -480,7 +525,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td class="keluhan">
+                                    <td class="keluhan" data-label="Keluhan">
 
                                         <?= htmlspecialchars(
                                             $row['catatan_keluhan']
@@ -489,7 +534,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td>
+                                    <td data-label="Status">
 
                                         <span class="
                                     status
@@ -522,7 +567,7 @@ function classStatus($status)
                                     </td>
 
 
-                                    <td>
+                                    <td data-label="Aksi">
 
 
                                         <!-- MENUNGGU -->
@@ -691,6 +736,12 @@ function classStatus($status)
                         <?php endif; ?>
 
 
+                    <tr id="filter-empty" hidden>
+                            <td colspan="8" class="empty">
+                                Tidak ada booking yang cocok dengan filter.
+                            </td>
+                        </tr>
+
                     </tbody>
 
 
@@ -699,11 +750,104 @@ function classStatus($status)
 
             </div>
 
+            <div class="pagination" id="pagination" hidden>
+                <span id="page-info"></span>
+                <div class="pagination-buttons" id="page-buttons"></div>
+            </div>
+
 
         </section>
 
 
     </main>
+
+    <script>
+        (function() {
+            const PER_HALAMAN = 10;
+            const baris = Array.from(document.querySelectorAll('tr.order-row'));
+            const tabs = Array.from(document.querySelectorAll('.filter-tab'));
+            const cari = document.getElementById('search-order');
+            const kosong = document.getElementById('filter-empty');
+            const pager = document.getElementById('pagination');
+            const info = document.getElementById('page-info');
+            const tombol = document.getElementById('page-buttons');
+
+            let filter = 'semua';
+            let halaman = 1;
+
+            // Jumlah per status di setiap tab
+            tabs.forEach(tab => {
+                const f = tab.dataset.filter;
+                const n = f === 'semua' ?
+                    baris.length :
+                    baris.filter(r => r.dataset.status === f).length;
+                tab.querySelector('.count').textContent = n;
+            });
+
+            function cocok(r) {
+                const q = cari.value.trim().toLowerCase();
+                return (filter === 'semua' || r.dataset.status === filter) &&
+                    (q === '' || r.dataset.search.includes(q));
+            }
+
+            function buatTombol(teks, tujuan, aktif, mati, label) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = teks;
+                b.setAttribute('aria-label', label);
+                if (aktif) b.classList.add('active');
+                b.disabled = !!mati;
+                b.addEventListener('click', () => {
+                    halaman = tujuan;
+                    render();
+                });
+                tombol.appendChild(b);
+            }
+
+            function render() {
+                const hasil = baris.filter(cocok);
+                const totalHal = Math.max(1, Math.ceil(hasil.length / PER_HALAMAN));
+                halaman = Math.min(halaman, totalHal);
+                const mulai = (halaman - 1) * PER_HALAMAN;
+
+                baris.forEach(r => r.hidden = true);
+                hasil.slice(mulai, mulai + PER_HALAMAN).forEach(r => r.hidden = false);
+
+                if (kosong) kosong.hidden = hasil.length > 0 || baris.length === 0;
+
+                pager.hidden = hasil.length <= PER_HALAMAN;
+                info.textContent = 'Menampilkan ' + (hasil.length ? mulai + 1 : 0) + '-' +
+                    Math.min(mulai + PER_HALAMAN, hasil.length) + ' dari ' + hasil.length + ' booking';
+
+                tombol.replaceChildren();
+                buatTombol('‹', halaman - 1, false, halaman === 1, 'Halaman sebelumnya');
+                for (let p = 1; p <= totalHal; p++) {
+                    buatTombol(String(p), p, p === halaman, false, 'Halaman ' + p);
+                }
+                buatTombol('›', halaman + 1, false, halaman === totalHal, 'Halaman berikutnya');
+            }
+
+            tabs.forEach(tab => tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                filter = tab.dataset.filter;
+                halaman = 1;
+                render();
+            }));
+
+            cari.addEventListener('input', () => {
+                halaman = 1;
+                render();
+            });
+
+            render();
+        })();
+    </script>
+
 
 
 </body>

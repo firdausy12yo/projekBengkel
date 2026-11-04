@@ -3,6 +3,32 @@ session_start();
 
 include 'koneksi.php';
 
+// Versi cache otomatis berdasarkan waktu ubah file.
+function asset_v($file)
+{
+    $path = __DIR__ . '/' . $file;
+    return $file . '?v=' . (file_exists($path) ? filemtime($path) : time());
+}
+
+// Daftar bengkel & layanan: ubah di sini saja, form ikut berubah.
+$daftar_bengkel = [
+    'PitStop Mitra - Jakarta Selatan',
+    'PitStop Mitra - Jakarta Pusat',
+    'PitStop Mitra - Jakarta Barat',
+    'PitStop Mitra - Jakarta Timur',
+    'PitStop Mitra - Bandung',
+    'PitStop Mitra - Surabaya',
+];
+
+$daftar_layanan = [
+    ['Servis Ban & Roda',   'fa-circle-dot',  'Servis Ban & Roda'],
+    ['Servis Mesin',        'fa-gear',        'Servis Mesin'],
+    ['Servis AC',           'fa-snowflake',   'Servis AC'],
+    ['Servis Kelistrikan',  'fa-bolt',        'Kelistrikan'],
+    ['Rem & Suspensi',      'fa-car-burst',   'Rem & Suspensi'],
+    ['Cuci & Poles',        'fa-soap',        'Cuci & Poles'],
+];
+
 if (
     isset($_SESSION['role']) &&
     $_SESSION['role'] === 'admin'
@@ -341,10 +367,10 @@ $halaman_awal =
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=<?= filemtime(__DIR__ . '/style.css') ?>">
-    <link rel="stylesheet" href="kendaraan_fitur.css">
-    <link rel="stylesheet" href="akun_layout.css?v=1">
-    <link rel="stylesheet" href="notifikasi.css">
+    <link rel="stylesheet" href="<?= asset_v('style.css') ?>">
+    <link rel="stylesheet" href="<?= asset_v('kendaraan_fitur.css') ?>">
+    <link rel="stylesheet" href="<?= asset_v('akun_layout.css') ?>">
+    <link rel="stylesheet" href="<?= asset_v('notifikasi.css') ?>">
 </head>
 
 <body>
@@ -377,10 +403,17 @@ $halaman_awal =
                 <div class="auth-left-overlay"></div>
                 <div class="auth-left-content">
                     <div class="brand">
-                        <img class="brand-logo" src="foto/logo%20bengkel.jpeg" alt="Logo Bengkel">
+                        <span class="brand-logo-wrap">
+                            <img class="brand-logo" src="foto/logo%20bengkel.jpeg" alt="Logo Bengkel">
+                        </span>
                         <h1>PitStop.id</h1>
                     </div>
                     <p class="tagline">Booking Service, Jadi Lebih Mudah!</p>
+                    <ul class="auth-benefits">
+                        <li><i class="fa-solid fa-calendar-check"></i> Booking servis tanpa antre</li>
+                        <li><i class="fa-solid fa-tags"></i> Harga transparan</li>
+                        <li><i class="fa-solid fa-bell"></i> Pantau status pesanan</li>
+                    </ul>
                 </div>
             </div>
 
@@ -393,22 +426,27 @@ $halaman_awal =
                         <p class="subtitle">Masuk ke akun PitStop.id Anda</p>
                     </div>
                     <form action="proses_login.php" method="POST">
+                        <label class="input-label" for="login-user">Username</label>
                         <div class="input-group">
                             <i class="fa-regular fa-user input-icon"></i>
-                            <input type="text" name="username" placeholder="Username" required autocomplete="username">
+                            <input type="text" name="username" id="login-user" placeholder="Masukkan username" required autocomplete="username">
                         </div>
+
+                        <label class="input-label" for="login-pass">Password</label>
                         <div class="input-group">
                             <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" name="password" id="login-pass" placeholder="Password" required autocomplete="current-password">
-                            <button type="button" class="toggle-pass" onclick="togglePassword('login-pass', this)">
+                            <input type="password" name="password" id="login-pass" placeholder="Masukkan password" required autocomplete="current-password">
+                            <button type="button" class="toggle-pass" aria-label="Tampilkan atau sembunyikan password" onclick="togglePassword('login-pass', this)">
                                 <i class="fa-regular fa-eye"></i>
                             </button>
                         </div>
+
+                        <a class="forgot-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=pitstopid.official@gmail.com&amp;su=Lupa+Password+PitStop.id&amp;body=Halo+admin,+saya+lupa+password.+Username+saya:+" target="_blank" rel="noopener">Lupa password?</a>
+
                         <button type="submit" class="btn-primary">
                             <i class="fa-solid fa-right-to-bracket"></i> Masuk
                         </button>
                     </form>
-                    <div class="auth-divider"><span>atau</span></div>
                     <p class="switch-text">Belum punya akun? <a href="#" onclick="toggleAuth('register')">Daftar Sekarang!</a></p>
                 </div>
 
@@ -416,43 +454,53 @@ $halaman_awal =
                 <div id="register-form" class="form-box" style="display: none;">
                     <div class="form-header">
                         <h2>Buat Akun Baru</h2>
-                        <p class="subtitle">Bergabung dengan jutaan pengguna PitStop.id</p>
+                        <p class="subtitle">Daftar dan nikmati kemudahan booking servis di PitStop.id</p>
                     </div>
                     <form action="proses_daftar.php" method="POST">
+                        <label class="input-label" for="reg-nama">Nama Lengkap</label>
                         <div class="input-group">
                             <i class="fa-solid fa-id-card input-icon"></i>
-                            <input type="text" name="nama_lengkap" placeholder="Nama Lengkap" required>
+                            <input type="text" name="nama_lengkap" id="reg-nama" placeholder="Nama sesuai identitas" required>
                         </div>
+
+                        <label class="input-label" for="reg-alamat">Alamat Lengkap</label>
                         <div class="input-group">
                             <i class="fa-solid fa-location-dot input-icon"></i>
-                            <input type="text" name="alamat" placeholder="Alamat Lengkap" required>
+                            <input type="text" name="alamat" id="reg-alamat" placeholder="Jalan, kota" required>
                         </div>
+
+                        <label class="input-label" for="reg-hp">Nomor HP</label>
                         <div class="input-group">
                             <i class="fa-solid fa-phone input-icon"></i>
-                            <input type="tel" name="no_hp" placeholder="Nomor HP, contoh: 081234567890"
-                                pattern="08[0-9]{8,11}" minlength="10" maxlength="13"
-                                inputmode="numeric" required>
+                            <input type="tel" name="no_hp" id="reg-hp" placeholder="Contoh: 081234567890"
+                                pattern="08[0-9]{8,11}" minlength="10" maxlength="13" inputmode="numeric" required>
                         </div>
+
+                        <label class="input-label" for="reg-email">Email</label>
                         <div class="input-group">
                             <i class="fa-regular fa-envelope input-icon"></i>
-                            <input type="email" name="email" placeholder="Email" required autocomplete="email">
+                            <input type="email" name="email" id="reg-email" placeholder="nama@email.com" required autocomplete="email">
                         </div>
+
+                        <label class="input-label" for="reg-user">Username</label>
                         <div class="input-group">
                             <i class="fa-regular fa-user input-icon"></i>
-                            <input type="text" name="username" placeholder="Username" required autocomplete="username">
+                            <input type="text" name="username" id="reg-user" placeholder="Pilih username" required autocomplete="username">
                         </div>
+
+                        <label class="input-label" for="reg-pass">Password</label>
                         <div class="input-group">
                             <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" name="password" id="reg-pass" placeholder="Password (min. 6 karakter)" required minlength="6" autocomplete="new-password">
-                            <button type="button" class="toggle-pass" onclick="togglePassword('reg-pass', this)">
+                            <input type="password" name="password" id="reg-pass" placeholder="Minimal 6 karakter" required minlength="6" autocomplete="new-password">
+                            <button type="button" class="toggle-pass" aria-label="Tampilkan atau sembunyikan password" onclick="togglePassword('reg-pass', this)">
                                 <i class="fa-regular fa-eye"></i>
                             </button>
                         </div>
+
                         <button type="submit" class="btn-primary">
                             <i class="fa-solid fa-user-plus"></i> Daftar Sekarang
                         </button>
                     </form>
-                    <div class="auth-divider"><span>atau</span></div>
                     <p class="switch-text">Sudah punya akun? <a href="#" onclick="toggleAuth('login')">Login Sekarang!</a></p>
                 </div>
             </div>
@@ -530,7 +578,7 @@ $halaman_awal =
             <div class="nav-right">
                 <span class="nav-user"><i class="fa-solid fa-circle-user"></i> <?= $username_sesi ?></span>
                 <a href="logout.php" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-                <button class="hamburger" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+                <button class="hamburger" type="button" aria-label="Buka menu navigasi" aria-controls="nav-links" aria-expanded="false" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
             </div>
         </nav>
 
@@ -554,7 +602,7 @@ $halaman_awal =
 
             <div class="features-bar">
                 <div class="feature"><i class="fa-solid fa-shield-halved"></i> Terjamin & Terpercaya</div>
-                <div class="feature"><i class="fa-solid fa-thumbs-up"></i> Kepuasan Pelanggan 98%</div>
+                <div class="feature"><i class="fa-solid fa-tags"></i> Harga Transparan</div>
                 <div class="feature"><i class="fa-solid fa-star"></i> Teknisi Berpengalaman</div>
                 <div class="feature"><i class="fa-solid fa-clock"></i> Layanan 7 Hari Seminggu</div>
             </div>
@@ -608,7 +656,7 @@ $halaman_awal =
                             <button class="btn-card">Booking <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </div>
-                    <div class="card" onclick="bookService('Servis Rem & Suspensi')">
+                    <div class="card" onclick="bookService('Rem & Suspensi')">
                         <div class="card-img-wrapper">
                             <img src="https://images.unsplash.com/photo-1486006920555-c77dcf18193c?q=80&w=400&auto=format&fit=crop" alt="Servis Rem">
                         </div>
@@ -636,6 +684,7 @@ $halaman_awal =
             <!-- Testimonial -->
             <section class="testimonial-section">
                 <h2 class="section-title"><i class="fa-solid fa-comment-dots"></i> Apa Kata Pelanggan Kami</h2>
+                <p class="testimonial-note">Contoh ulasan untuk keperluan demo. Ganti dengan ulasan pelanggan asli saat sudah tersedia.</p>
                 <div class="testimonial-grid">
                     <div class="testimonial-card">
                         <div class="testimonial-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
@@ -680,39 +729,36 @@ $halaman_awal =
                         <div class="footer-logo"><i class="fa-solid fa-car-side"></i> PitStop.id</div>
                         <p>Platform booking servis mobil terpercaya di Indonesia. Mudah, cepat, dan transparan.</p>
                         <div class="footer-social">
-                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                            <a href="#"><i class="fa-brands fa-facebook"></i></a>
-                            <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
-                            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                            <a href="https://wa.me/6288985118045" target="_blank" rel="noopener" aria-label="WhatsApp PitStop.id"><i class="fa-brands fa-whatsapp"></i></a>
+                            <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=pitstopid.official@gmail.com" target="_blank" rel="noopener" aria-label="Kirim email ke PitStop.id"><i class="fa-solid fa-envelope"></i></a>
                         </div>
                     </div>
                     <div class="footer-links">
                         <h4>Layanan</h4>
                         <ul>
-                            <li><a href="#">Servis Mesin</a></li>
-                            <li><a href="#">Servis Ban</a></li>
-                            <li><a href="#">Servis AC</a></li>
-                            <li><a href="#">Servis Rem</a></li>
+                            <li><a href="#" onclick="bookService('Servis Mesin'); return false;">Servis Mesin</a></li>
+                            <li><a href="#" onclick="bookService('Servis Ban & Roda'); return false;">Servis Ban</a></li>
+                            <li><a href="#" onclick="bookService('Servis AC'); return false;">Servis AC</a></li>
+                            <li><a href="#" onclick="bookService('Rem & Suspensi'); return false;">Servis Rem</a></li>
                         </ul>
                     </div>
                     <div class="footer-links">
-                        <h4>Perusahaan</h4>
+                        <h4>Bantuan</h4>
                         <ul>
-                            <li><a href="#">Tentang Kami</a></li>
-                            <li><a href="#">Blog</a></li>
-                            <li><a href="#">Karir</a></li>
-                            <li><a href="#">Hubungi Kami</a></li>
+                            <li><a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=pitstopid.official@gmail.com" target="_blank" rel="noopener">Email Dukungan</a></li>
+                            <li><a href="https://wa.me/6288985118045" target="_blank" rel="noopener">Chat WhatsApp</a></li>
+                            <li><a href="#" onclick="showPage('order'); return false;">Pesanan Saya</a></li>
                         </ul>
                     </div>
                     <div class="footer-contact">
                         <h4>Kontak</h4>
                         <p><i class="fa-solid fa-phone"></i> 0889-8511-8045</p>
-                        <p><i class="fa-solid fa-envelope"></i> support@pitstop.id</p>
+                        <p><i class="fa-solid fa-envelope"></i> <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=pitstopid.official@gmail.com" target="_blank" rel="noopener" class="footer-email">pitstopid.official@gmail.com</a></p>
                         <p><i class="fa-solid fa-location-dot"></i> Jakarta, Indonesia</p>
                     </div>
                 </div>
                 <div class="footer-bottom">
-                    <p>&copy; 2025 PitStop.id — All Rights Reserved.</p>
+                    <p>&copy; <?= date('Y') ?> PitStop.id — All Rights Reserved.</p>
                 </div>
             </footer>
         </div>
@@ -729,6 +775,7 @@ $halaman_awal =
             <div class="booking-container">
                 <form
                     class="booking-form"
+                    id="form-booking"
                     action="proses_booking.php"
                     method="POST">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_kendaraan'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
@@ -791,32 +838,16 @@ $halaman_awal =
                         <div class="step-number">2</div>
                         <div class="step-content">
                             <h3>Pilih Layanan</h3>
-                            <div class="service-options">
-                                <label class="service-option">
-                                    <input type="radio" name="layanan" value="Servis Ban & Roda" required>
-                                    <div class="service-option-box"><i class="fa-solid fa-circle-dot"></i><span>Servis Ban & Roda</span></div>
-                                </label>
-                                <label class="service-option">
-                                    <input type="radio" name="layanan" value="Servis Mesin">
-                                    <div class="service-option-box"><i class="fa-solid fa-gear"></i><span>Servis Mesin</span></div>
-                                </label>
-                                <label class="service-option">
-                                    <input type="radio" name="layanan" value="Servis AC">
-                                    <div class="service-option-box"><i class="fa-solid fa-snowflake"></i><span>Servis AC</span></div>
-                                </label>
-                                <label class="service-option">
-                                    <input type="radio" name="layanan" value="Servis Kelistrikan">
-                                    <div class="service-option-box"><i class="fa-solid fa-bolt"></i><span>Kelistrikan</span></div>
-                                </label>
-                                <label class="service-option">
-                                    <input type="radio" name="layanan" value="Rem & Suspensi">
-                                    <div class="service-option-box"><i class="fa-solid fa-car-burst"></i><span>Rem & Suspensi</span></div>
-                                </label>
-                                <label class="service-option">
-                                    <input type="radio" name="layanan" value="Cuci & Poles">
-                                    <div class="service-option-box"><i class="fa-solid fa-soap"></i><span>Cuci & Poles</span></div>
-                                </label>
+                            <p class="vehicle-help" style="margin-bottom:12px;">Pilih satu atau lebih layanan.</p>
+                            <div class="service-options" id="service-options">
+                                <?php foreach ($daftar_layanan as $lay): ?>
+                                    <label class="service-option">
+                                        <input type="checkbox" name="layanan[]" value="<?= htmlspecialchars($lay[0], ENT_QUOTES, 'UTF-8') ?>">
+                                        <div class="service-option-box"><i class="fa-solid <?= $lay[1] ?>"></i><span><?= htmlspecialchars($lay[2], ENT_QUOTES, 'UTF-8') ?></span></div>
+                                    </label>
+                                <?php endforeach; ?>
                             </div>
+                            <p class="form-error" id="layanan-error" role="alert" hidden>Pilih minimal satu layanan.</p>
                             <div class="form-field" style="margin-top:20px;">
                                 <label>Keluhan / Keterangan Tambahan</label>
                                 <textarea name="keluhan" rows="3" placeholder="Ceritakan keluhan kendaraan Anda..."></textarea>
@@ -833,8 +864,8 @@ $halaman_awal =
                                     <input type="date" name="tanggal" required id="tgl-booking">
                                 </div>
                                 <div class="form-field">
-                                    <label>Jam Servis</label>
-                                    <select name="jam" required>
+                                    <label for="booking-jam">Jam Servis</label>
+                                    <select name="jam" id="booking-jam" required>
                                         <option value="" disabled selected>Pilih Jam</option>
                                         <option>08:00</option>
                                         <option>09:00</option>
@@ -848,14 +879,11 @@ $halaman_awal =
                                 </div>
                                 <div class="form-field full-width">
                                     <label>Pilih Bengkel</label>
-                                    <select name="bengkel" required>
+                                    <select name="bengkel" id="booking-bengkel" required>
                                         <option value="" disabled selected>Pilih Bengkel Terdekat</option>
-                                        <option>PitStop Mitra - Jakarta Selatan</option>
-                                        <option>PitStop Mitra - Jakarta Pusat</option>
-                                        <option>PitStop Mitra - Jakarta Barat</option>
-                                        <option>PitStop Mitra - Jakarta Timur</option>
-                                        <option>PitStop Mitra - Bandung</option>
-                                        <option>PitStop Mitra - Surabaya</option>
+                                        <?php foreach ($daftar_bengkel as $b): ?>
+                                            <option><?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
@@ -1326,11 +1354,11 @@ $halaman_awal =
                             </h3>
 
                             <div class="vehicle-scroll-buttons">
-                                <button type="button" onclick="geserKendaraan(-1)">
+                                <button type="button" aria-label="Geser kendaraan ke kiri" onclick="geserKendaraan(-1)">
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </button>
 
-                                <button type="button" onclick="geserKendaraan(1)">
+                                <button type="button" aria-label="Geser kendaraan ke kanan" onclick="geserKendaraan(1)">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </button>
                             </div>
@@ -1468,10 +1496,10 @@ $halaman_awal =
                         </form>
                     </div>
 
-                    <div class="account-section account-danger-zone">
-                        <h3><i class="fa-solid fa-triangle-exclamation"></i> Zona Bahaya</h3>
-                        <p>Tindakan di bawah ini bersifat permanen dan tidak dapat dibatalkan.</p>
-                        <a href="logout.php" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout dari Akun</a>
+                    <div class="account-section account-session">
+                        <h3><i class="fa-solid fa-right-from-bracket"></i> Sesi Akun</h3>
+                        <p>Keluar dari akun ini di perangkat yang sedang Anda pakai.</p>
+                        <a href="logout.php" class="btn-outline"><i class="fa-solid fa-right-from-bracket"></i> Logout dari Akun</a>
                     </div>
                 </div>
             </div>
@@ -1590,7 +1618,10 @@ $halaman_awal =
         // MOBILE MENU
         // ============================================
         function toggleMobileMenu() {
-            document.getElementById('nav-links').classList.toggle('open');
+            const menu = document.getElementById('nav-links');
+            const terbuka = menu.classList.toggle('open');
+            const tombolMenu = document.querySelector('.hamburger');
+            if (tombolMenu) tombolMenu.setAttribute('aria-expanded', terbuka ? 'true' : 'false');
         }
 
         // ============================================
@@ -1650,7 +1681,7 @@ $halaman_awal =
             let visibleCount = 0;
             document.querySelectorAll('#order-list .order-card').forEach(card => {
                 const show = status === 'semua' || card.dataset.status === status;
-                card.style.display = show ?'' : 'none';
+                card.style.display = show ? '' : 'none';
                 if (show) visibleCount++;
             });
 
@@ -1818,9 +1849,11 @@ $halaman_awal =
             showPage('booking');
             // Pilih radio button yang sesuai
             setTimeout(() => {
-                document.querySelectorAll('input[name="layanan"]').forEach(r => {
-                    if (r.value === namaLayanan) r.checked = true;
+                document.querySelectorAll('input[name="layanan[]"]').forEach(c => {
+                    c.checked = (c.value === namaLayanan);
                 });
+                const err = document.getElementById('layanan-error');
+                if (err) err.hidden = true;
             }, 100);
         }
 
@@ -1842,6 +1875,79 @@ $halaman_awal =
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
+
+        // ============================================
+        // VALIDASI LAYANAN (minimal 1 dipilih)
+        // ============================================
+        const formBooking = document.getElementById('form-booking');
+        if (formBooking) {
+            formBooking.addEventListener('submit', function(e) {
+                const dipilih = formBooking.querySelectorAll('input[name="layanan[]"]:checked').length;
+                const err = document.getElementById('layanan-error');
+                if (dipilih === 0) {
+                    e.preventDefault();
+                    if (err) {
+                        err.hidden = false;
+                        err.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                } else if (err) {
+                    err.hidden = true;
+                }
+            });
+            formBooking.addEventListener('change', function(e) {
+                if (e.target.name === 'layanan[]') {
+                    const err = document.getElementById('layanan-error');
+                    if (err) err.hidden = formBooking.querySelectorAll('input[name="layanan[]"]:checked').length > 0;
+                }
+            });
+        }
+
+        // ============================================
+        // JAM PENUH: tandai slot yang sudah terisi
+        // ============================================
+        function perbaruiJamPenuh() {
+            const tgl = document.getElementById('tgl-booking');
+            const bengkel = document.getElementById('booking-bengkel');
+            const jam = document.getElementById('booking-jam');
+            if (!tgl || !bengkel || !jam) return;
+
+            // Reset dulu semua pilihan jam
+            Array.from(jam.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.disabled = false;
+                opt.textContent = opt.value;
+            });
+
+            if (!tgl.value || !bengkel.value) return;
+
+            const url = 'cek_jam.php?tanggal=' + encodeURIComponent(tgl.value) +
+                '&bengkel=' + encodeURIComponent(bengkel.value);
+
+            fetch(url, {
+                    credentials: 'same-origin'
+                })
+                .then(r => r.ok ? r.json() : Promise.reject())
+                .then(data => {
+                    const penuh = (data && data.penuh) || [];
+                    Array.from(jam.options).forEach(opt => {
+                        if (!opt.value) return;
+                        if (penuh.includes(parseInt(opt.value, 10))) {
+                            opt.disabled = true;
+                            opt.textContent = opt.value + ' (Penuh)';
+                            if (jam.value === opt.value) jam.value = '';
+                        }
+                    });
+                })
+                .catch(() => {
+                    /* gagal cek: biarkan semua jam bisa dipilih */
+                });
+        }
+
+        document.getElementById('tgl-booking')?.addEventListener('change', perbaruiJamPenuh);
+        document.getElementById('booking-bengkel')?.addEventListener('change', perbaruiJamPenuh);
 
         // ============================================
         // SET MIN DATE BOOKING = BESOK

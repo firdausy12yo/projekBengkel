@@ -1,3 +1,19 @@
+:root {
+    --primary:      #2b35d6;
+    --primary-dark: #1a22b3;
+    --primary-light:#e6ecff;
+    --dark-blue:    #0a0b6b;
+    --success:      #28a745;
+    --danger:       #dc3545;
+    --bg:           #f5f6fa;
+    --white:        #ffffff;
+    --text:         #1e1e2e;
+    --text-muted:   #667085;
+    --border:       #e5e7eb;
+    --radius:       14px;
+    --radius-sm:    8px;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -5,9 +21,9 @@
 }
 
 body {
-    font-family: "Poppins", Arial, sans-serif;
-    background: #f5f7fb;
-    color: #1e293b;
+    font-family: 'Poppins', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
 }
 
 .admin-navbar {
@@ -30,13 +46,13 @@ body {
 
 .admin-logo i,
 .admin-logo span {
-    color: #2563eb;
+    color: var(--primary);
 }
 
 .admin-logo small {
     background: #111827;
     color: white;
-    font-size: 10px;
+    font-size: 11px;
     padding: 4px 7px;
     border-radius: 5px;
     margin-left: 8px;
@@ -71,7 +87,7 @@ body {
 }
 
 .admin-header p {
-    color: #64748b;
+    color: var(--text-muted);
     margin-top: 5px;
 }
 
@@ -97,14 +113,14 @@ body {
     height: 45px;
     display: grid;
     place-items: center;
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--primary-light);
+    color: var(--primary);
     border-radius: 10px;
 }
 
 .stat-card span {
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .stat-card strong {
@@ -145,7 +161,7 @@ body {
 }
 
 .section-header p {
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 14px;
 }
 
@@ -162,7 +178,7 @@ th {
     text-align: left;
     font-size: 12px;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--text-muted);
     background: #f8fafc;
     padding: 14px;
 }
@@ -176,7 +192,8 @@ td {
 
 td small {
     display: block;
-    color: #64748b;
+    font-size: 12px;
+    color: var(--text-muted);
     margin-top: 4px;
 }
 
@@ -184,7 +201,7 @@ td small {
     display: inline-block;
     padding: 6px 10px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -226,7 +243,9 @@ td small {
     gap: 5px;
 }
 
-button {
+.admin-container button {
+    font-family: inherit;
+    font-size: 12px;
     border: none;
     cursor: pointer;
     padding: 8px 10px;
@@ -260,14 +279,14 @@ button {
 }
 
 .no-action {
-    color: #94a3b8;
+    color: #667085;
     font-size: 12px;
 }
 
 .empty {
     text-align: center;
     padding: 50px;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 @media(max-width: 1000px) {
@@ -284,4 +303,189 @@ button {
     .admin-user span {
         display: none;
     }
+}
+
+/* ===== Toolbar filter + pencarian ===== */
+.orders-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-container .filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--white);
+    color: #34405c;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.admin-container .filter-tab .count {
+    background: #eef0f6;
+    color: #475467;
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 11px;
+}
+
+.admin-container .filter-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.admin-container .filter-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+}
+
+.admin-container .filter-tab.active .count {
+    background: rgba(255, 255, 255, .22);
+    color: var(--white);
+}
+
+.search-box {
+    position: relative;
+    flex: 0 1 300px;
+    min-width: 200px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #667085;
+    font-size: 13px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 12px 10px 34px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font: inherit;
+    font-size: 13px;
+    background: var(--white);
+}
+
+/* ===== Pagination ===== */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.admin-container .pagination button {
+    min-width: 36px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    color: #34405c;
+}
+
+.admin-container .pagination button.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+}
+
+.admin-container .pagination button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* ===== Aksi di tabel lebih lega ===== */
+.action-form input {
+    max-width: 100%;
+}
+
+.action-buttons button,
+.admin-container td > form > button {
+    padding: 9px 12px;
+}
+
+.keluhan {
+    max-width: 220px;
+}
+
+/* ===== Fokus keyboard ===== */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+    outline: 3px solid rgba(43, 53, 214, .35);
+    outline-offset: 2px;
+}
+
+.search-box input:focus {
+    border-color: var(--primary);
+}
+
+/* ===== HP: baris tabel jadi kartu ===== */
+@media(max-width: 800px) {
+    .table-wrapper { overflow-x: visible; }
+
+    table, tbody, tr, td { display: block; width: 100%; }
+    thead { display: none; }
+
+    tr.order-row {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 8px 4px;
+        margin-bottom: 14px;
+        background: var(--white);
+    }
+
+    tr.order-row td {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px dashed #eef0f6;
+        text-align: right;
+    }
+
+    tr.order-row td:last-child { border-bottom: none; }
+
+    tr.order-row td::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-align: left;
+    }
+
+    .admin-note { max-width: none; }
+    .keluhan { max-width: none; }
+    .action-form input { width: 100%; }
+    .orders-section { padding: 16px; }
+    .search-box { flex-basis: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
 }

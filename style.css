@@ -91,16 +91,18 @@ a { text-decoration: none; }
    ========================================= */
 .auth-container {
     display: flex;
-    height: 100vh;
+    min-height: 100vh;
     width: 100%;
     background: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
     padding: 24px;
     gap: 0;
+    align-items: stretch;
 }
 
 /* LEFT PANEL */
 .auth-left {
-    flex: 1.1;
+    flex: 1.1 1 0;
+    min-width: 0;
     border-radius: var(--radius) 0 0 var(--radius);
     display: flex;
     flex-direction: column;
@@ -109,7 +111,10 @@ a { text-decoration: none; }
     position: relative;
     overflow: hidden;
     color: var(--white);
-    background: linear-gradient(135deg, rgba(37,99,235,0.9) 0%, rgba(96,165,250,0.86) 100%);
+    background:
+        linear-gradient(135deg, rgba(29,78,216,0.88) 0%, rgba(37,99,235,0.72) 100%),
+        url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1200&auto=format&fit=crop') center / cover no-repeat;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18);
 }
 
 .auth-left-overlay {
@@ -121,55 +126,103 @@ a { text-decoration: none; }
 
 .auth-left-content {
     position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 40px;
+    padding: clamp(24px, 4vw, 48px);
     width: 100%;
+    color: var(--white);
 }
 
 .brand {
     display: flex;
     align-items: center;
     gap: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
+}
+
+.brand-logo-wrap {
+    display: grid;
+    place-items: center;
+    background: #fff;
+    border-radius: 18px;
+    padding: 8px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
 .brand-logo {
-    width: 128px; height: 96px;
-    object-fit: cover;
-    object-position: center;
-    mix-blend-mode: multiply;
+    display: block;
+    width: 104px;
+    height: 78px;
+    object-fit: contain;
 }
 
-.brand h1 { font-size: 34px; font-weight: 800; letter-spacing: 0; }
+.brand h1 { font-size: 34px; font-weight: 800; letter-spacing: 0; color: var(--white); }
 
 .tagline {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 28px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.25);
+}
+
+.auth-benefits {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    margin-top: 6px;
+    text-align: left;
+}
+
+.auth-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 14px;
-    font-weight: 300;
-    opacity: 0.85;
-    margin-bottom: 30px;
-    letter-spacing: 0.5px;
+    font-weight: 500;
+    color: var(--white);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.25);
+}
+
+.auth-benefits i {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    font-size: 13px;
 }
 
 /* RIGHT PANEL */
 .auth-right {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     background: var(--white);
     border-radius: 0 var(--radius) var(--radius) 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 50px 40px;
-    overflow-y: auto;
+    padding: clamp(32px, 4vw, 56px) clamp(24px, 4vw, 48px);
 }
 
-.form-box { width: 100%; max-width: 400px; }
+.form-box { width: 100%; max-width: 440px; }
 
 .form-header { margin-bottom: 28px; }
-.form-header h2 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-.subtitle { font-size: 13px; color: var(--text-muted); }
+.form-header h2 { font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.subtitle { font-size: 14px; color: var(--text-muted); }
+
+.input-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
 
 .input-group {
     position: relative;
@@ -192,6 +245,12 @@ a { text-decoration: none; }
     border-color: var(--primary);
     background: var(--white);
     box-shadow: 0 0 0 3px rgba(43,53,214,0.1);
+}
+
+/* Hilangkan warna biru muda bawaan autofill Chrome */
+.input-group input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    -webkit-text-fill-color: var(--text);
 }
 
 .input-icon {
@@ -218,6 +277,20 @@ a { text-decoration: none; }
     transition: var(--transition);
 }
 .toggle-pass:hover { color: var(--primary); }
+
+.forgot-link {
+    display: block;
+    margin: -6px 0 18px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+}
+.forgot-link:hover { text-decoration: underline; }
+
+@media (max-width: 900px) {
+    .auth-benefits { display: none; }
+}
 
 .btn-primary {
     width: 100%;
@@ -329,7 +402,7 @@ a { text-decoration: none; }
 .notif-dot {
     background: var(--danger);
     color: white;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     padding: 1px 5px;
     border-radius: 10px;
@@ -558,7 +631,7 @@ a { text-decoration: none; }
     top: 12px; left: 12px;
     background: var(--accent);
     color: #7c4f00;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 3px 10px;
     border-radius: 50px;
@@ -784,7 +857,7 @@ a { text-decoration: none; }
     background: rgba(0,0,0,0.1);
     padding: 1px 7px;
     border-radius: 10px;
-    font-size: 11px;
+    font-size: 12px;
 }
 .tab.active .badge { background: rgba(255,255,255,0.3); }
 
@@ -833,7 +906,7 @@ a { text-decoration: none; }
 .item-content p  { font-size: 13px; color: #555; line-height: 1.5; }
 
 .item-time {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -873,7 +946,7 @@ a { text-decoration: none; }
 .status-badge {
     padding: 3px 12px;
     border-radius: 50px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     display: inline-block;
     text-transform: uppercase;
@@ -1055,7 +1128,7 @@ a { text-decoration: none; }
     background: rgba(255,255,255,0.18);
     padding: 3px 12px;
     border-radius: 50px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     margin-top: 6px;
 }
@@ -1066,7 +1139,7 @@ a { text-decoration: none; }
 }
 .pstat { text-align: center; }
 .pstat span { display: block; font-size: 22px; font-weight: 700; }
-.pstat small { font-size: 11px; opacity: 0.75; }
+.pstat small { font-size: 12px; opacity: 0.75; }
 
 .account-grid {
     display: grid;
@@ -1209,8 +1282,9 @@ a { text-decoration: none; }
    ========================================= */
 @media (max-width: 900px) {
     .auth-container { flex-direction: column; padding: 0; }
-    .auth-left  { border-radius: 0; min-height: 280px; }
-    .auth-right { border-radius: 0; padding: 36px 24px; }
+    .auth-left  { flex: 0 0 auto; border-radius: 0; min-height: 240px; }
+    .auth-left-content { padding: 28px 24px; }
+    .auth-right { flex: 1 0 auto; border-radius: 0; padding: 40px 24px; }
     .navbar { padding: 0 20px; }
     .nav-links { display: none; flex-direction: column; gap: 6px; position: absolute; top: var(--navbar-h); left: 0; right: 0; background: rgba(10,11,107,0.97); padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .nav-links.open { display: flex; }
@@ -1326,7 +1400,7 @@ a { text-decoration: none; }
     min-width: 0;
     margin: 0;
     padding: 9px 7px;
-    font-size: 11px;
+    font-size: 12px;
     text-align: center;
 }
 
@@ -1487,9 +1561,9 @@ a { text-decoration: none; }
 
 /* Tombol detail */
 #content-order .btn-detail {
-    background: #2834c8;
+    background: var(--primary);
     color: #fff;
-    border: 1px solid #2834c8;
+    border: 1px solid var(--primary);
 }
 
 #content-order .btn-detail:hover {
@@ -1589,7 +1663,7 @@ a { text-decoration: none; }
     }
 
     #content-order .order-info small {
-        font-size: 11px;
+        font-size: 12px;
     }
 
     /* Tombol dalam dua kolom */
@@ -1830,4 +1904,136 @@ a { text-decoration: none; }
 /* Tampilan kosong memakai lebar penuh */
 #content-notif .psn-empty {
     grid-column: 1 / -1;
+}
+
+
+/* =========================================
+   PERBAIKAN UI (aksesibilitas & konten)
+   ========================================= */
+
+/* Fokus keyboard yang jelas di seluruh situs */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+.card:focus-visible {
+    outline: 3px solid rgba(43, 53, 214, 0.35);
+    outline-offset: 2px;
+}
+
+/* Pilihan layanan (checkbox) tetap terlihat saat difokus lewat keyboard */
+.service-option input:focus-visible + .service-option-box {
+    outline: 3px solid rgba(43, 53, 214, 0.35);
+    outline-offset: 2px;
+}
+
+.form-error {
+    margin-top: 10px;
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.form-error[hidden] { display: none; }
+
+.testimonial-note {
+    margin: -6px 0 18px;
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Bagian "Sesi Akun" menggantikan Zona Bahaya (logout bukan aksi berbahaya) */
+.account-session > p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.account-session .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+/* Hormati pengguna yang mengurangi animasi */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
+/* Email di footer bisa diklik */
+.footer-contact .footer-email {
+    color: inherit;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.footer-contact .footer-email:hover {
+    text-decoration: underline;
+}
+
+/* ===== Halaman login: tambahan ===== */
+.auth-benefits {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    margin-top: 6px;
+    text-align: left;
+}
+
+.auth-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.25);
+}
+
+.auth-benefits i {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    font-size: 13px;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.forgot-link {
+    display: block;
+    margin: -6px 0 18px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.forgot-link:hover { text-decoration: underline; }
+
+.switch-text { margin-top: 22px; }
+
+/* Hilangkan warna biru muda bawaan autofill Chrome */
+.input-group input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    -webkit-text-fill-color: var(--text);
+}
+
+@media (max-width: 900px) {
+    .auth-benefits { display: none; }
 }
