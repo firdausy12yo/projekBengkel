@@ -1,0 +1,228 @@
+/* =====================================
+   LAYOUT HALAMAN AKUN
+===================================== */
+
+[hidden] {
+    display: none !important;
+}
+
+/* Area akun lebih lebar */
+#content-account .account-container {
+    width: 100%;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 30px clamp(16px, 3vw, 42px);
+}
+
+/* Layout utama: 2 kolom */
+#content-account .account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+#content-account .account-grid > .account-section {
+    min-width: 0;
+}
+
+/* Kendaraan menjadi panel utama paling atas */
+#content-account .account-grid > .account-section:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+
+/* Edit Profil di kiri */
+#content-account .account-grid > .account-section:nth-child(1) {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* Ubah Password di kanan */
+#content-account .account-grid > .account-section:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+/* Zona Bahaya tetap di bagian bawah */
+#content-account .account-grid > .account-section:nth-child(4) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
+    max-width: 430px;
+}
+
+/* =====================================
+   HEADER KENDARAAN
+===================================== */
+
+#content-account .vehicle-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e5e9f4;
+}
+
+#content-account .vehicle-panel-heading h3 {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Tombol panah kanan dan kiri */
+#content-account .vehicle-scroll-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+#content-account .vehicle-scroll-buttons button {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid #dbe2f5;
+    background: #f8faff;
+    color: #2732bc;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#content-account .vehicle-scroll-buttons button:hover {
+    background: #2732bc;
+    color: white;
+}
+
+/* =====================================
+   LIST KENDARAAN HORIZONTAL
+===================================== */
+
+#content-account .vehicle-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(
+        275px,
+        calc((100% - 36px) / 3)
+    );
+    gap: 18px;
+    align-items: start;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    padding: 4px 2px 16px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: #c6ccef transparent;
+}
+
+/* Desain kartu */
+#content-account .vehicle-entry {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #dce4fa;
+    border-radius: 16px;
+    padding: 16px;
+    background: linear-gradient(
+        145deg,
+        #ffffff,
+        #f4f6ff
+    );
+    box-shadow: 0 5px 16px rgba(30, 45, 100, 0.05);
+    scroll-snap-align: start;
+}
+
+/* Informasi kendaraan */
+#content-account .vehicle-entry .vehicle-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+#content-account .vehicle-entry .vehicle-info {
+    flex: 1;
+    min-width: 0;
+}
+
+#content-account .vehicle-entry .vehicle-info strong {
+    display: block;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+/* Tombol Booking dan Edit */
+#content-account .vehicle-entry > .vehicle-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+}
+
+#content-account .vehicle-entry > .vehicle-actions button {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* Form Edit ketika dibuka */
+#content-account .vehicle-edit-form {
+    margin-top: 14px;
+    padding-top: 14px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+/* Riwayat servis */
+#content-account .vehicle-history {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #dce4fa;
+}
+
+#content-account .vehicle-history summary {
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+/* =====================================
+   RESPONSIVE HP
+===================================== */
+
+@media (max-width: 768px) {
+
+    #content-account .account-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #content-account .account-grid > .account-section:nth-child(2) {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    #content-account .account-grid > .account-section:nth-child(1) {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    #content-account .account-grid > .account-section:nth-child(3) {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    #content-account .account-grid > .account-section:nth-child(4) {
+        grid-column: 1;
+        grid-row: 4;
+    }
+
+    #content-account .vehicle-list {
+        grid-auto-columns: minmax(250px, 85%);
+    }
+}

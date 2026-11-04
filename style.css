@@ -1272,3 +1272,562 @@ a { text-decoration: none; }
     background: #dc3545;
     color: white;
 }
+
+/* =====================================
+   PERBAIKAN FITUR KENDARAAN SAYA
+===================================== */
+
+/* Menyembunyikan elemen dengan atribut hidden */
+[hidden] {
+    display: none !important;
+}
+
+/* Kotak tiap kendaraan */
+#content-account .vehicle-entry {
+    background: #f8faff;
+    border: 1px solid #dfe6f5;
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 0;
+}
+
+/* Baris informasi kendaraan */
+#content-account .vehicle-entry .vehicle-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+/* Informasi merk, model, dan plat */
+#content-account .vehicle-entry .vehicle-info {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Tombol Booking dan Edit */
+#content-account .vehicle-entry > .vehicle-actions {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Ukuran tombol */
+#content-account .vehicle-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 9px 7px;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* Tampilan form Edit */
+#content-account .vehicle-edit-form {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #c7d2fe;
+    border-radius: 10px;
+    background: white;
+}
+
+/* Tombol Simpan dan Batal */
+#content-account .vehicle-edit-form .vehicle-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+/* Riwayat servis */
+#content-account .vehicle-history {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #dfe6f5;
+}
+
+#content-account .vehicle-history summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+/* Daftar riwayat */
+#content-account .vehicle-history-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+#content-account .vehicle-history-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+}
+
+/* =========================================
+   PESANAN - RESPONSIVE DESKTOP & MOBILE
+========================================= */
+
+/* Pusatkan daftar pesanan */
+#content-order .list-container {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+    box-sizing: border-box;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: stretch;
+}
+
+/* Kartu pesanan */
+#content-order .order-card {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+        "icon info"
+        "actions actions";
+
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 22px;
+
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(25, 35, 90, 0.04);
+}
+
+#content-order .order-card:hover {
+    transform: translateY(-2px);
+    border-color: #c7d2fe;
+}
+
+/* Icon */
+#content-order .order-icon {
+    grid-area: icon;
+    width: 48px;
+    height: 48px;
+}
+
+/* Informasi */
+#content-order .order-info {
+    grid-area: info;
+    min-width: 0;
+}
+
+#content-order .order-info p {
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+#content-order .order-info small {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    line-height: 1.6;
+    white-space: normal;
+}
+
+/* Area tombol */
+#content-order .order-actions {
+    grid-area: actions;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    width: 100%;
+    padding-top: 14px;
+    border-top: 1px solid #edf0f6;
+}
+
+/* Form pembatalan */
+#content-order .cancel-form {
+    margin: 0;
+}
+
+/* Kedua tombol */
+#content-order .btn-cancel-order,
+#content-order .btn-detail {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 42px;
+    margin: 0;
+    padding: 10px 16px;
+
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Tombol detail */
+#content-order .btn-detail {
+    background: #2834c8;
+    color: #fff;
+    border: 1px solid #2834c8;
+}
+
+#content-order .btn-detail:hover {
+    background: #171e90;
+    color: #fff;
+}
+
+/* Tab status */
+#content-order .tabs {
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Tampilan saat belum ada pesanan */
+#content-order #order-empty {
+    grid-column: 1 / -1;
+}
+
+/* =========================================
+   DETAIL PESANAN / MODAL
+========================================= */
+
+#order-detail-modal {
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+#order-detail-modal .order-detail-modal {
+    width: 100%;
+    max-width: 600px;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    padding: 24px;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+#order-detail-modal .modal-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+#order-detail-modal .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#order-detail-modal .detail-item {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+    #content-order .list-container {
+        max-width: 700px;
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+    #content-order .list-container {
+        width: 100%;
+        padding: 18px 14px 32px;
+        gap: 14px;
+    }
+
+    #content-order .order-card {
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 12px;
+        padding: 16px;
+    }
+
+    #content-order .order-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+    }
+
+    #content-order .order-card:hover {
+        transform: none;
+    }
+
+    #content-order .order-info p {
+        font-size: 14px;
+    }
+
+    #content-order .order-info small {
+        font-size: 11px;
+    }
+
+    /* Tombol dalam dua kolom */
+    #content-order .order-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    #content-order .cancel-form {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #content-order .btn-cancel-order,
+    #content-order .btn-detail {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    /* Jika cuma ada tombol Detail */
+    #content-order .order-actions > .btn-detail:only-child {
+        grid-column: 1 / -1;
+    }
+
+    /* Tab bisa digeser ke samping */
+    #content-order .tabs {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 14px;
+        scrollbar-width: thin;
+    }
+
+    #content-order .tabs .tab {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    /* Modal detail satu kolom */
+    #order-detail-modal .order-detail-modal {
+        padding: 18px;
+    }
+
+    #order-detail-modal .detail-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ====================================
+   MERAPIKAN INFORMASI DETAIL PESANAN
+==================================== */
+
+#order-detail-modal .detail-item {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+}
+
+/* Label informasi */
+#order-detail-modal .detail-item span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Menambahkan tanda = */
+#order-detail-modal .detail-item span::after {
+    content: " =";
+    color: #334155;
+    font-weight: 600;
+}
+
+/* Isi informasi */
+#order-detail-modal .detail-item strong {
+    font-size: 13px;
+    color: #1e293b;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* =====================================
+   BOOKING - LAYOUT DESKTOP
+===================================== */
+
+#content-booking .booking-container {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 32px 40px 55px;
+    box-sizing: border-box;
+}
+
+/* Susunan form dua kolom */
+#content-booking .booking-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 20px;
+}
+
+/* Tampilan tiap langkah */
+#content-booking .booking-step {
+    min-width: 0;
+    padding: 26px;
+    border-radius: 16px;
+}
+
+/* Data kendaraan memakai lebar penuh */
+#content-booking .booking-step:first-of-type {
+    grid-column: 1 / -1;
+}
+
+/* Hindari elemen melebar keluar kartu */
+#content-booking .step-content {
+    min-width: 0;
+}
+
+/* Form data kendaraan */
+#content-booking .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Pilihan layanan */
+#content-booking .service-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Tombol kirim booking */
+#content-booking .booking-submit {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+}
+
+#content-booking .btn-booking {
+    min-width: 240px;
+    max-width: 100%;
+}
+
+/* =====================================
+   BOOKING - TABLET & MOBILE
+===================================== */
+
+@media (max-width: 900px) {
+    #content-booking .booking-container {
+        padding: 24px;
+    }
+
+    #content-booking .booking-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #content-booking .booking-step:first-of-type {
+        grid-column: 1;
+    }
+
+    #content-booking .booking-submit {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 560px) {
+    #content-booking .booking-container {
+        padding: 16px;
+    }
+
+    #content-booking .booking-step {
+        padding: 18px;
+    }
+
+    #content-booking .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #content-booking .btn-booking {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* =====================================
+   NOTIFIKASI - LAYOUT DESKTOP
+===================================== */
+
+/* Pusatkan toolbar dan daftar notifikasi */
+#content-notif .psn-toolbar,
+#content-notif .psn-list {
+    width: 100%;
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+/* Toolbar filter */
+#content-notif .psn-toolbar {
+    padding: 0 40px;
+    margin-top: 28px;
+    margin-bottom: 18px;
+}
+
+/* Daftar notifikasi dua kolom */
+#content-notif .psn-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: stretch;
+    padding: 0 40px 50px;
+}
+
+/* Kartu notifikasi */
+#content-notif .psn-card {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 16px;
+    transition: 0.2s ease;
+}
+
+#content-notif .psn-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(20, 35, 90, 0.08);
+}
+
+/* Teks panjang tidak keluar kartu */
+#content-notif .psn-body {
+    min-width: 0;
+}
+
+#content-notif .psn-body p {
+    overflow-wrap: anywhere;
+}
+
+/* Tampilan kosong memakai lebar penuh */
+#content-notif .psn-empty {
+    grid-column: 1 / -1;
+}

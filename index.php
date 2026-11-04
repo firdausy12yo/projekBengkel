@@ -219,6 +219,61 @@ if (isset($_SESSION['id_pelanggan'])) {
 }
 
 // ==========================================
+// DAFTAR KENDARAAN AKTIF MILIK USER
+// ==========================================
+
+$kendaraan_profil = [];
+$jumlah_pesanan_profil = $jumlah_semua;
+$jumlah_kendaraan_profil = 0;
+
+if (isset($_SESSION['id_pelanggan'])) {
+    $id_pelanggan = (int) $_SESSION['id_pelanggan'];
+    if (!isset($_SESSION['csrf_kendaraan'])) {
+        $_SESSION['csrf_kendaraan'] = bin2hex(random_bytes(32));
+    }
+    $stmtKendaraan = $koneksi->prepare(
+        "SELECT id_kendaraan, merk, model, tahun_keluar, no_plat
+         FROM kendaraan
+         WHERE id_pelanggan = ? AND is_active = 1
+         ORDER BY id_kendaraan DESC"
+    );
+    $stmtKendaraan->bind_param("i", $id_pelanggan);
+    $stmtKendaraan->execute();
+    $hasilKendaraanProfil = $stmtKendaraan->get_result();
+    while ($item = $hasilKendaraanProfil->fetch_assoc()) {
+        $kendaraan_profil[] = $item;
+    }
+    $stmtKendaraan->close();
+    $jumlah_kendaraan_profil = count($kendaraan_profil);
+}
+
+// Riwayat booking/servis untuk setiap kendaraan, satu query per akun.
+$riwayat_per_kendaraan = [];
+if (isset($_SESSION['id_pelanggan'])) {
+    $id_pelanggan = (int) $_SESSION['id_pelanggan'];
+    $stmtRiwayat = $koneksi->prepare(
+        "SELECT b.id_booking, b.id_kendaraan, b.tanggal_booking, b.jam_booking,
+                b.status_booking, b.nama_bengkel,
+                COALESCE((
+                    SELECT GROUP_CONCAT(l.nama_layanan ORDER BY l.nama_layanan SEPARATOR ', ')
+                    FROM detail_booking d
+                    JOIN layanan l ON l.id_layanan = d.id_layanan
+                    WHERE d.id_booking = b.id_booking
+                ), 'Layanan servis') AS nama_layanan
+         FROM booking b
+         WHERE b.id_pelanggan = ?
+         ORDER BY b.tanggal_booking DESC, b.jam_booking DESC, b.id_booking DESC"
+    );
+    $stmtRiwayat->bind_param('i', $id_pelanggan);
+    $stmtRiwayat->execute();
+    $hasilRiwayat = $stmtRiwayat->get_result();
+    while ($r = $hasilRiwayat->fetch_assoc()) {
+        $riwayat_per_kendaraan[(int)$r['id_kendaraan']][] = $r;
+    }
+    $stmtRiwayat->close();
+}
+
+// ==========================================
 // PESAN REDIRECT
 // ==========================================
 
@@ -231,6 +286,38 @@ $pesan_sukses =
     isset($_GET['sukses'])
     ? htmlspecialchars($_GET['sukses'])
     : '';
+
+// ==========================================
+// JUMLAH NOTIFIKASI BELUM DIBACA
+// ==========================================
+
+$jumlahNotifBaru = 0;
+
+if (isset($_SESSION['id_pelanggan'])) {
+
+    if (!isset($_SESSION['csrf_notifikasi'])) {
+        $_SESSION['csrf_notifikasi'] = bin2hex(random_bytes(32));
+    }
+
+    $idPelanggan = (int) $_SESSION['id_pelanggan'];
+
+    $stmtNotif = $koneksi->prepare(
+        "SELECT COUNT(*) AS total
+         FROM notifikasi
+         WHERE id_pelanggan = ?
+         AND sudah_dibaca = 0
+         AND dihapus = 0"
+    );
+
+    $stmtNotif->bind_param('i', $idPelanggan);
+    $stmtNotif->execute();
+
+    $hasilNotif = $stmtNotif->get_result()->fetch_assoc();
+
+    $jumlahNotifBaru = (int) $hasilNotif['total'];
+
+    $stmtNotif->close();
+}
 
 // ==========================================
 // HALAMAN AWAL
@@ -255,6 +342,9 @@ $halaman_awal =
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="style.css?v=<?= filemtime(__DIR__ . '/style.css') ?>">
+    <link rel="stylesheet" href="kendaraan_fitur.css">
+    <link rel="stylesheet" href="akun_layout.css?v=1">
+    <link rel="stylesheet" href="notifikasi.css">
 </head>
 
 <body>
@@ -406,7 +496,11 @@ $halaman_awal =
                             <path d="M10 21h4" />
                         </svg>
                         <span>Notifikasi</span>
-                        <span class="notif-dot">3</span>
+                        <?php if ($jumlahNotifBaru > 0): ?>
+                            <span class="notif-dot">
+                                <?= $jumlahNotifBaru ?>
+                            </span>
+                        <?php endif; ?>
                     </a>
                 </li>
                 <li>
@@ -434,7 +528,7 @@ $halaman_awal =
                 </li>
             </ul>
             <div class="nav-right">
-                <span class="nav-user"><i class="fa-solid fa-circle-user"></i> @<?= $username_sesi ?></span>
+                <span class="nav-user"><i class="fa-solid fa-circle-user"></i> <?= $username_sesi ?></span>
                 <a href="logout.php" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                 <button class="hamburger" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
             </div>
@@ -637,11 +731,32 @@ $halaman_awal =
                     class="booking-form"
                     action="proses_booking.php"
                     method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_kendaraan'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     <div class="booking-step">
                         <div class="step-number">1</div>
                         <div class="step-content">
                             <h3>Data Kendaraan</h3>
-                            <div class="form-grid">
+                            <div class="form-field vehicle-select-field">
+                                <label for="booking-pilih-kendaraan">Pilih Kendaraan</label>
+                                <select name="kendaraan_id" id="booking-pilih-kendaraan" onchange="pilihKendaraanBooking()" required>
+                                    <?php if (!empty($kendaraan_profil)): ?>
+                                        <option value="" disabled selected>-- Pilih kendaraan tersimpan atau tambah baru --</option>
+                                        <?php foreach ($kendaraan_profil as $itemKendaraan): ?>
+                                            <option value="<?= (int)$itemKendaraan['id_kendaraan'] ?>"
+                                                data-merk="<?= htmlspecialchars($itemKendaraan['merk'], ENT_QUOTES, 'UTF-8') ?>"
+                                                data-model="<?= htmlspecialchars($itemKendaraan['model'], ENT_QUOTES, 'UTF-8') ?>"
+                                                data-tahun="<?= htmlspecialchars(date('Y', strtotime($itemKendaraan['tahun_keluar'])), ENT_QUOTES, 'UTF-8') ?>"
+                                                data-plat="<?= htmlspecialchars($itemKendaraan['no_plat'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <?= htmlspecialchars($itemKendaraan['merk'] . ' ' . $itemKendaraan['model'] . ' — ' . $itemKendaraan['no_plat'], ENT_QUOTES, 'UTF-8') ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                    <option value="baru" <?= empty($kendaraan_profil) ? 'selected' : '' ?>>+ Tambah kendaraan baru</option>
+                                </select>
+                                <p class="vehicle-help">Gunakan kendaraan yang sudah terdaftar agar tidak perlu mengisi data berulang.</p>
+                            </div>
+                            <div id="booking-ringkasan-kendaraan" class="booking-vehicle-preview" hidden></div>
+                            <div id="booking-data-baru" class="form-grid" <?= !empty($kendaraan_profil) ? 'hidden' : '' ?>>
                                 <div class="form-field">
                                     <label>Merk Kendaraan</label>
                                     <select name="merk" required>
@@ -659,15 +774,15 @@ $halaman_awal =
                                 </div>
                                 <div class="form-field">
                                     <label>Model / Tipe</label>
-                                    <input type="text" name="model" placeholder="Contoh: Avanza 1.3 G" required>
+                                    <input type="text" name="model" maxlength="100" placeholder="Contoh: Avanza 1.3 G" required>
                                 </div>
                                 <div class="form-field">
                                     <label>Tahun Kendaraan</label>
-                                    <input type="number" name="tahun" placeholder="Contoh: 2019" min="1990" max="2026" required>
+                                    <input type="number" name="tahun" placeholder="Contoh: 2019" min="1900" max="<?= (int)date('Y') + 1 ?>" required>
                                 </div>
                                 <div class="form-field">
                                     <label>Nomor Polisi</label>
-                                    <input type="text" name="nopol" placeholder="Contoh: B 1234 ABC" required>
+                                    <input type="text" name="nopol" maxlength="20" placeholder="Contoh: AD 1234 ABC" required>
                                 </div>
                             </div>
                         </div>
@@ -757,45 +872,13 @@ $halaman_awal =
 
         <!-- C. KONTEN NOTIFIKASI -->
         <div id="content-notif" class="content-section">
-            <div class="page-header">
-                <i class="fa-solid fa-bell header-icon"></i>
-                <div>
-                    <h2>Notifikasi</h2>
-                    <p>Pantau semua informasi terbaru mengenai pesanan dan aktivitas akun Anda.</p>
-                </div>
-            </div>
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab(this)">Servis <span class="badge">3</span></button>
-                <button class="tab" onclick="switchTab(this)">Pesanan <span class="badge">2</span></button>
-                <button class="tab" onclick="switchTab(this)">Sistem <span class="badge">1</span></button>
-            </div>
-            <div class="list-container">
-                <div class="list-item success">
-                    <div class="item-icon"><i class="fa-solid fa-check"></i></div>
-                    <div class="item-content">
-                        <h4>Pesanan Diterima</h4>
-                        <p>Pesanan <strong>#BK-20251026-001</strong> telah diterima dan sedang diproses oleh bengkel.</p>
-                    </div>
-                    <div class="item-time">Hari ini, 10:24 <i class="fa-solid fa-chevron-right"></i></div>
-                </div>
-                <div class="list-item info">
-                    <div class="item-icon"><i class="fa-solid fa-calendar"></i></div>
-                    <div class="item-content">
-                        <h4>Jadwal Servis Terkonfirmasi</h4>
-                        <p>Servis untuk pesanan <strong>#BK-20251024-005</strong> akan dilaksanakan pada <strong>28 Oktober 2025</strong> pukul 09:00.</p>
-                    </div>
-                    <div class="item-time">Kemarin, 14:45 <i class="fa-solid fa-chevron-right"></i></div>
-                </div>
-                <div class="list-item danger">
-                    <div class="item-icon"><i class="fa-solid fa-xmark"></i></div>
-                    <div class="item-content">
-                        <h4>Pesanan Dibatalkan</h4>
-                        <p>Pesanan <strong>#BK-20251020-003</strong> dibatalkan oleh admin. Alasan: Jadwal bengkel penuh.</p>
-                    </div>
-                    <div class="item-time">20 Okt 2025, 14:32 <i class="fa-solid fa-chevron-right"></i></div>
-                </div>
-            </div>
+
+            <?php include __DIR__ . '/notifikasi_view.php'; ?>
+
         </div>
+
+
+
 
         <!-- D. KONTEN PESANAN -->
 
@@ -1203,8 +1286,8 @@ $halaman_awal =
                         <span class="profile-badge"><i class="fa-solid fa-shield-check"></i> Akun Terverifikasi</span>
                     </div>
                     <div class="profile-stats">
-                        <div class="pstat"><span>4</span><small>Pesanan</small></div>
-                        <div class="pstat"><span>2</span><small>Kendaraan</small></div>
+                        <div class="pstat"><span><?= $jumlah_pesanan_profil ?></span><small>Pesanan</small></div>
+                        <div class="pstat"><span><?= $jumlah_kendaraan_profil ?></span><small>Kendaraan</small></div>
                     </div>
                 </div>
 
@@ -1236,28 +1319,109 @@ $halaman_awal =
                     </div>
 
                     <div class="account-section">
-                        <h3><i class="fa-solid fa-car"></i> Kendaraan Saya</h3>
-                        <div class="vehicle-list">
-                            <div class="vehicle-card">
-                                <div class="vehicle-icon"><i class="fa-solid fa-car"></i></div>
-                                <div class="vehicle-info">
-                                    <strong>Toyota Avanza 2019</strong>
-                                    <span>B 1234 ABC</span>
-                                </div>
-                                <button class="btn-icon-danger"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                            <div class="vehicle-card">
-                                <div class="vehicle-icon"><i class="fa-solid fa-car"></i></div>
-                                <div class="vehicle-info">
-                                    <strong>Honda Brio 2021</strong>
-                                    <span>B 5678 XYZ</span>
-                                </div>
-                                <button class="btn-icon-danger"><i class="fa-solid fa-trash"></i></button>
+                        <div class="vehicle-panel-heading">
+                            <h3>
+                                <i class="fa-solid fa-car"></i>
+                                Kendaraan Saya
+                            </h3>
+
+                            <div class="vehicle-scroll-buttons">
+                                <button type="button" onclick="geserKendaraan(-1)">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+
+                                <button type="button" onclick="geserKendaraan(1)">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
                             </div>
                         </div>
-                        <button class="btn-outline" style="margin-top:15px;" onclick="alert('Fitur tambah kendaraan segera hadir!')">
+                        <div class="vehicle-list">
+                            <?php if (empty($kendaraan_profil)): ?>
+                                <div class="vehicle-empty"><i class="fa-solid fa-car"></i> Belum ada kendaraan terdaftar. Tambah kendaraan atau buat booking baru.</div>
+                            <?php else: ?>
+                                <?php foreach ($kendaraan_profil as $itemKendaraan): ?>
+                                    <?php
+                                    $idK = (int)$itemKendaraan['id_kendaraan'];
+                                    $riwayatK = $riwayat_per_kendaraan[$idK] ?? [];
+                                    $tahunK = date('Y', strtotime($itemKendaraan['tahun_keluar']));
+                                    ?>
+                                    <div class="vehicle-entry">
+                                        <div class="vehicle-card">
+                                            <div class="vehicle-icon"><i class="fa-solid fa-car"></i></div>
+                                            <div class="vehicle-info">
+                                                <strong><?= htmlspecialchars($itemKendaraan['merk'] . ' ' . $itemKendaraan['model'] . ' ' . $tahunK, ENT_QUOTES, 'UTF-8') ?></strong>
+                                                <span><?= htmlspecialchars($itemKendaraan['no_plat'], ENT_QUOTES, 'UTF-8') ?></span>
+                                            </div>
+                                            <form action="proses_arsip_kendaraan.php" method="POST"
+                                                onsubmit="return confirm('Hapus dari daftar aktif? Riwayat booking tetap tersimpan.')"
+                                                class="vehicle-delete-form">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_kendaraan'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="id_kendaraan" value="<?= $idK ?>">
+                                                <button class="btn-icon-danger" type="submit" title="Hapus kendaraan dari daftar aktif" aria-label="Hapus kendaraan"><i class="fa-solid fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                        <div class="vehicle-actions">
+                                            <button type="button" class="btn-primary btn-sm" onclick="mulaiBookingKendaraan(<?= $idK ?>)"><i class="fa-solid fa-calendar-plus"></i> Booking Servis</button>
+                                            <button type="button" class="btn-outline btn-sm" onclick="toggleEditKendaraan(<?= $idK ?>)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                        </div>
+                                        <form id="edit-kendaraan-<?= $idK ?>" class="account-form vehicle-edit-form" method="POST" action="proses_edit_kendaraan.php" hidden>
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_kendaraan'], ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="id_kendaraan" value="<?= $idK ?>">
+                                            <div class="form-field"><label>Merk</label><input name="merk" maxlength="100" value="<?= htmlspecialchars($itemKendaraan['merk'], ENT_QUOTES, 'UTF-8') ?>" required></div>
+                                            <div class="form-field"><label>Model / Tipe</label><input name="model" maxlength="100" value="<?= htmlspecialchars($itemKendaraan['model'], ENT_QUOTES, 'UTF-8') ?>" required></div>
+                                            <div class="form-field"><label>Tahun</label><input type="number" name="tahun" min="1900" max="<?= (int)date('Y') + 1 ?>" value="<?= htmlspecialchars($tahunK, ENT_QUOTES, 'UTF-8') ?>" required></div>
+                                            <div class="form-field"><label>Nomor Polisi</label><input name="nopol" maxlength="20" value="<?= htmlspecialchars($itemKendaraan['no_plat'], ENT_QUOTES, 'UTF-8') ?>" required></div>
+                                            <?php if ($riwayatK): ?>
+                                                <p class="vehicle-help">Kendaraan ini punya riwayat booking; nomor polisi tidak bisa diubah agar data pesanan tetap konsisten.</p>
+                                            <?php endif; ?>
+                                            <div class="vehicle-actions"><button type="submit" class="btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn-outline btn-sm" type="button" onclick="toggleEditKendaraan(<?= $idK ?>)">Batal</button></div>
+                                        </form>
+                                        <details class="vehicle-history">
+                                            <summary><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Booking & Servis <span>(<?= count($riwayatK) ?>)</span></summary>
+                                            <?php if (!$riwayatK): ?>
+                                                <p class="vehicle-help">Belum ada riwayat servis untuk kendaraan ini.</p>
+                                            <?php else: ?>
+                                                <div class="vehicle-history-items">
+                                                    <?php foreach ($riwayatK as $riwayat): ?>
+                                                        <div class="vehicle-history-item">
+                                                            <strong><?= htmlspecialchars($riwayat['nama_layanan'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                                            <span class="vehicle-history-status"><?= htmlspecialchars($riwayat['status_booking'], ENT_QUOTES, 'UTF-8') ?></span>
+                                                            <small>BK-<?= str_pad((string)$riwayat['id_booking'], 4, '0', STR_PAD_LEFT) ?> · <?= htmlspecialchars(date('d-m-Y', strtotime($riwayat['tanggal_booking'])), ENT_QUOTES, 'UTF-8') ?> · <?= sprintf('%02d:00', (int)$riwayat['jam_booking']) ?></small>
+                                                            <small><?= htmlspecialchars($riwayat['nama_bengkel'] ?: 'Bengkel belum ditentukan', ENT_QUOTES, 'UTF-8') ?></small>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </details>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                        <button class="btn-outline" type="button" style="margin-top:15px;"
+                            onclick="var f=document.getElementById('form-tambah-kendaraan'); f.hidden=!f.hidden;">
                             <i class="fa-solid fa-plus"></i> Tambah Kendaraan
                         </button>
+                        <form id="form-tambah-kendaraan" class="account-form" action="proses_tambah_kendaraan.php"
+                            method="POST" hidden style="margin-top:15px;">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_kendaraan'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                            <div class="form-field">
+                                <label>Merk</label>
+                                <input type="text" name="merk" maxlength="100" placeholder="Contoh: Toyota" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Model / Tipe</label>
+                                <input type="text" name="model" maxlength="100" placeholder="Contoh: Avanza" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Tahun</label>
+                                <input type="number" name="tahun" min="1900" max="<?= (int) date('Y') + 1 ?>" placeholder="Contoh: 2020" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Nomor Polisi</label>
+                                <input type="text" name="nopol" maxlength="20" placeholder="Contoh: AD 1234 AB" required>
+                            </div>
+                            <button class="btn-primary btn-sm" type="submit">Simpan Kendaraan</button>
+                        </form>
                     </div>
 
                     <div class="account-section">
@@ -1449,6 +1613,34 @@ $halaman_awal =
             el.classList.add('active');
         }
 
+        function filterNotif(mode, tombol) {
+            document.querySelectorAll('.psn-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            tombol.classList.add('active');
+
+            let jumlahTampil = 0;
+
+            document.querySelectorAll('.psn-card').forEach(card => {
+                const belumDibaca = card.dataset.unread === '1';
+
+                const tampil = mode === 'semua' || belumDibaca;
+
+                card.hidden = !tampil;
+
+                if (tampil) {
+                    jumlahTampil++;
+                }
+            });
+
+            const pesanKosong = document.getElementById('psn-filter-empty');
+
+            if (pesanKosong) {
+                pesanKosong.hidden = jumlahTampil > 0;
+            }
+        }
+
         // Filter tab khusus halaman Pesanan
         function switchOrderTab(el, status) {
             const tabs = el.closest('.tabs').querySelectorAll('.tab');
@@ -1458,7 +1650,7 @@ $halaman_awal =
             let visibleCount = 0;
             document.querySelectorAll('#order-list .order-card').forEach(card => {
                 const show = status === 'semua' || card.dataset.status === status;
-                card.style.display = show ? 'flex' : 'none';
+                card.style.display = show ?'' : 'none';
                 if (show) visibleCount++;
             });
 
@@ -1545,6 +1737,81 @@ $halaman_awal =
         });
 
         // ============================================
+        // KENDARAAN TERSIMPAN + EDIT KENDARAAN
+        // ============================================
+        function toggleEditKendaraan(id) {
+            const form = document.getElementById('edit-kendaraan-' + id);
+
+            if (!form) return;
+
+            const akanDibuka = form.hidden;
+
+            // Tutup semua form edit kendaraan
+            document.querySelectorAll('.vehicle-edit-form').forEach(item => {
+                item.hidden = true;
+            });
+
+            // Buka atau tutup form yang dipilih
+            form.hidden = !akanDibuka;
+        }
+
+        function geserKendaraan(arah) {
+            const daftar = document.querySelector(
+                '#content-account .vehicle-list'
+            );
+
+            if (!daftar) return;
+
+            const kartu = daftar.querySelector('.vehicle-entry');
+
+            const jarak = kartu ?
+                kartu.getBoundingClientRect().width + 18 :
+                300;
+
+            daftar.scrollBy({
+                left: arah * jarak,
+                behavior: 'smooth'
+            });
+        }
+
+        function pilihKendaraanBooking() {
+            const select = document.getElementById('booking-pilih-kendaraan');
+            const baru = document.getElementById('booking-data-baru');
+            const ringkasan = document.getElementById('booking-ringkasan-kendaraan');
+            if (!select || !baru || !ringkasan) return;
+            const id = select.value;
+            const isBaru = id === 'baru';
+            const isTersimpan = id !== '' && !isBaru;
+            baru.hidden = !isBaru;
+            baru.querySelectorAll('input,select').forEach(field => {
+                field.disabled = !isBaru;
+                field.required = isBaru;
+            });
+            ringkasan.hidden = !isTersimpan;
+            if (isTersimpan) {
+                const item = select.options[select.selectedIndex];
+                const info = document.createElement('span');
+                info.textContent = 'Kendaraan dipilih: ' + item.dataset.merk + ' ' + item.dataset.model +
+                    ' (' + item.dataset.tahun + ') — ' + item.dataset.plat;
+                ringkasan.replaceChildren(info);
+            } else {
+                ringkasan.replaceChildren();
+            }
+        }
+
+        function mulaiBookingKendaraan(id) {
+            showPage('booking');
+            const select = document.getElementById('booking-pilih-kendaraan');
+            if (!select) return;
+            select.value = String(id);
+            pilihKendaraanBooking();
+            document.getElementById('content-booking')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        // ============================================
         // BOOKING SERVICE (dari card di beranda)
         // ============================================
         function bookService(namaLayanan) {
@@ -1556,6 +1823,7 @@ $halaman_awal =
                 });
             }, 100);
         }
+
         function closeModal() {
             document.getElementById('booking-modal').style.display = 'none';
             showPage('order');
@@ -1598,6 +1866,43 @@ $halaman_awal =
 
         function confirmBatalBooking() {
             return confirm('Apakah Anda yakin ingin membatalkan booking ini?');
+        }
+
+        // Mulai dengan pilihan kendaraan sesuai data akun.
+        pilihKendaraanBooking();
+        // Setelah proses simpan/edit/hapus, kembali ke halaman yang relevan.
+        const parameterHalaman = new URLSearchParams(window.location.search).get('halaman');
+        if (document.getElementById('main-app')?.classList.contains('active') && ['account', 'booking', 'order', 'home', 'notif'].includes(parameterHalaman)) {
+            showPage(parameterHalaman);
+        }
+
+        // Buka detail booking dari notifikasi
+        const idDariNotif = new URLSearchParams(
+            window.location.search
+        ).get('pesanan_id');
+
+        if (idDariNotif && /^\d+$/.test(idDariNotif)) {
+
+            const nomorBooking = 'BK-' +
+                String(Number(idDariNotif)).padStart(5, '0');
+
+            const tombolDetail = Array.from(
+                document.querySelectorAll('#order-list .btn-detail')
+            ).find(btn => btn.dataset.id === nomorBooking);
+
+            if (tombolDetail) {
+                showPage('order');
+                openOrderFromData(tombolDetail);
+            }
+        }
+
+        // Jangan mengulang notifikasi sukses/error setiap kali halaman di-refresh.
+        const urlBersih = new URL(window.location.href);
+        if (urlBersih.searchParams.has('sukses') || urlBersih.searchParams.has('error')) {
+            urlBersih.searchParams.delete('sukses');
+            urlBersih.searchParams.delete('error');
+            window.history.replaceState({}, document.title,
+                urlBersih.pathname + urlBersih.search + urlBersih.hash);
         }
     </script>
 </body>

@@ -1,0 +1,218 @@
+/* ==================================
+   PITSTOP NOTIFICATION UI
+================================== */
+
+#content-notif .psn-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+#content-notif .psn-filters {
+    display: flex;
+    gap: 8px;
+}
+
+#content-notif .psn-filter,
+#content-notif .psn-read-all {
+    border: 1px solid #dbe2f2;
+    border-radius: 9px;
+    padding: 10px 15px;
+    background: white;
+    color: #28356c;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#content-notif .psn-filter.active {
+    background: #282bbb;
+    color: white;
+    border-color: #282bbb;
+}
+
+#content-notif .psn-read-all:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#content-notif .psn-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 950px;
+}
+
+#content-notif .psn-card {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    border: 1px solid #e1e6f0;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 3px 12px rgba(20, 35, 90, 0.04);
+}
+
+#content-notif .psn-card.is-unread {
+    background: #f3f5ff;
+    border-left: 4px solid #303acb;
+}
+
+#content-notif .psn-card[hidden],
+#content-notif .psn-empty[hidden] {
+    display: none !important;
+}
+
+#content-notif .psn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: #e5e9ff;
+    color: #303acb;
+    font-size: 18px;
+}
+
+#content-notif .psn-body {
+    flex: 1;
+    min-width: 0;
+}
+
+#content-notif .psn-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#content-notif .psn-title-row h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #171c50;
+}
+
+#content-notif .psn-new {
+    padding: 3px 9px;
+    border-radius: 30px;
+    background: #303acb;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+#content-notif .psn-body p {
+    margin: 8px 0;
+    color: #536079;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+#content-notif .psn-body small {
+    color: #8892a6;
+    font-size: 11px;
+}
+
+#content-notif .psn-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+#content-notif .psn-btn {
+    padding: 8px 12px;
+    border: 1px solid #dbe1ed;
+    border-radius: 8px;
+    background: white;
+    color: #34405c;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#content-notif .psn-btn.primary {
+    background: #303acb;
+    border-color: #303acb;
+    color: white;
+}
+
+#content-notif .psn-btn.danger {
+    color: #dc3545;
+    border-color: #f4cbd1;
+}
+
+#content-notif .psn-btn:hover {
+    filter: brightness(0.94);
+}
+
+#content-notif .psn-empty {
+    padding: 45px 20px;
+    text-align: center;
+    color: #8892a6;
+    background: white;
+    border-radius: 14px;
+}
+
+#content-notif .psn-empty i {
+    font-size: 30px;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+    #content-notif .psn-card {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    #content-notif .psn-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    #content-notif .psn-toolbar {
+        align-items: flex-start;
+    }
+}
+
+
+/* =====================================
+   NOTIFIKASI - TABLET & MOBILE
+===================================== */
+
+@media (max-width: 900px) {
+    #content-notif .psn-list {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 0 24px 35px;
+    }
+
+    #content-notif .psn-toolbar {
+        padding: 0 24px;
+    }
+}
+
+@media (max-width: 560px) {
+    #content-notif .psn-list {
+        padding: 0 16px 30px;
+        gap: 12px;
+    }
+
+    #content-notif .psn-toolbar {
+        padding: 0 16px;
+    }
+
+    #content-notif .psn-card {
+        padding: 15px;
+    }
+
+    #content-notif .psn-actions {
+        gap: 8px;
+    }
+}

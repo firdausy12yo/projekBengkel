@@ -14,7 +14,7 @@ date_default_timezone_set('Asia/Jakarta');
 if (!isset($_SESSION['id_pelanggan'])) {
 
     header(
-        "Location: index.php?error="
+        "Location: index.php?halaman=booking&error="
             . urlencode("Silakan login terlebih dahulu.")
     );
 
@@ -67,16 +67,29 @@ $jam =
 $bengkel =
     trim($_POST['bengkel'] ?? '');
 
+// 'baru' = ketik data kendaraan; angka ID = kendaraan tersimpan.
+$pilihanKendaraan = trim((string)($_POST['kendaraan_id'] ?? 'baru'));
+$pakaiKendaraanTersimpan = ($pilihanKendaraan !== 'baru');
+
+// Form booking menggunakan token yang dibuat saat halaman index dimuat.
+$token = $_POST['csrf_token'] ?? '';
+if (!is_string($token) || !isset($_SESSION['csrf_kendaraan']) ||
+    !hash_equals($_SESSION['csrf_kendaraan'], $token)) {
+    header('Location: index.php?halaman=booking&error=' . urlencode('Sesi form kedaluwarsa. Muat ulang halaman lalu coba lagi.'));
+    exit();
+}
+
 
 // ==========================================
 // VALIDASI
 // ==========================================
 
 if (
-    $merk === '' ||
-    $model === '' ||
-    $tahun <= 0 ||
-    $nopol === '' ||
+    (!$pakaiKendaraanTersimpan && (
+        $merk === '' || $model === '' || $tahun < 1900 ||
+        $tahun > ((int)date('Y') + 1) || $nopol === '' ||
+        strlen($merk) > 100 || strlen($model) > 100 || strlen($nopol) > 20
+    )) ||
     $layanan === '' ||
     $tanggal === '' ||
     $jam === '' ||
@@ -84,7 +97,7 @@ if (
 ) {
 
     header(
-        "Location: index.php?error="
+        "Location: index.php?halaman=booking&error="
             . urlencode("Data booking belum lengkap.")
     );
 
@@ -95,7 +108,7 @@ if (
 if ($tanggal < date('Y-m-d')) {
 
     header(
-        "Location: index.php?error="
+        "Location: index.php?halaman=booking&error="
             . urlencode(
                 "Tanggal booking tidak boleh sebelum hari ini."
             )
@@ -125,7 +138,33 @@ try {
 
 
     // ==========================================
-    // 1. CARI KENDARAAN
+    // 1. AMBIL KENDARAAN TERSIMPAN (JIKA DIPILIH)
+    // ==========================================
+    if ($pakaiKendaraanTersimpan) {
+        $idDipilih = filter_var($pilihanKendaraan, FILTER_VALIDATE_INT);
+        if (!$idDipilih || $idDipilih < 1) {
+            throw new Exception('Pilihan kendaraan tidak valid.');
+        }
+        $cekDipilih = $koneksi->prepare(
+            'SELECT merk, model, tahun_keluar, no_plat FROM kendaraan
+             WHERE id_kendaraan = ? AND id_pelanggan = ? AND is_active = 1 LIMIT 1'
+        );
+        $cekDipilih->bind_param('ii', $idDipilih, $id_pelanggan);
+        $cekDipilih->execute();
+        $dataDipilih = $cekDipilih->get_result()->fetch_assoc();
+        $cekDipilih->close();
+        if (!$dataDipilih) {
+            throw new Exception('Kendaraan tidak ditemukan pada akun kamu. Pilih kendaraan lain.');
+        }
+        // Abaikan data kendaraan dari browser; data resmi berasal dari database.
+        $merk = $dataDipilih['merk'];
+        $model = $dataDipilih['model'];
+        $nopol = $dataDipilih['no_plat'];
+        $tahun_keluar = $dataDipilih['tahun_keluar'];
+    }
+
+    // ==========================================
+    // 2. CARI ATAU BUAT KENDARAAN
     // ==========================================
 
     $cekKendaraan = $koneksi->prepare(
@@ -179,7 +218,8 @@ try {
                  SET
                     merk = ?,
                     model = ?,
-                    tahun_keluar = ?
+                    tahun_keluar = ?,
+                    is_active = 1
                  WHERE id_kendaraan = ?
                  AND id_pelanggan = ?"
             );
@@ -429,7 +469,7 @@ try {
 
 
     header(
-        "Location: index.php?sukses="
+        "Location: index.php?halaman=order&sukses="
             . urlencode(
                 "Booking berhasil dibuat. Menunggu konfirmasi admin."
             )
@@ -443,7 +483,7 @@ try {
 
 
     header(
-        "Location: index.php?error="
+        "Location: index.php?halaman=booking&error="
             . urlencode($e->getMessage())
     );
 
